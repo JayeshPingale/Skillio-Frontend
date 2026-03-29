@@ -1,0 +1,386 @@
+<div class="target-manage-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <button class="btn-back" (click)="cancel()">
+      <span class="material-icons">arrow_back</span>
+    </button>
+    <div class="header-info">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">flag</span>
+        {{ pageTitle() }}
+      </h1>
+      <p class="page-subtitle">{{ pageSubtitle() }}</p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading...</p>
+  </div>
+
+  <!-- Form -->
+  <div *ngIf="!isLoading()" class="form-container">
+    
+    <!-- Target Info (Achievement Mode Only) -->
+    <div *ngIf="isAchievementMode() && currentTarget()" class="info-section">
+      <div class="info-header">
+        <span class="material-icons">info</span>
+        <span>Target Details</span>
+      </div>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Sales Executive:</span>
+          <span class="info-value">{{ currentTarget()?.userName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Period:</span>
+          <span class="info-value">{{ currentTarget()?.targetPeriod }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Target Leads:</span>
+          <span class="info-value">{{ currentTarget()?.targetLeads }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Target Enrollments:</span>
+          <span class="info-value">{{ currentTarget()?.targetEnrollments }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Target Revenue:</span>
+          <span class="info-value highlight">₹{{ currentTarget()?.targetRevenue | number }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Duration:</span>
+          <span class="info-value">
+            {{ currentTarget()?.startDate | date: 'dd MMM' }} - {{ currentTarget()?.endDate | date: 'dd MMM yyyy' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="targetForm" (ngSubmit)="onSubmit()" class="target-form">
+      
+      <!-- ==================== CREATE/EDIT MODE ==================== -->
+      <ng-container *ngIf="!isAchievementMode()">
+        
+        <!-- Sales Executive -->
+        <div class="form-group" *ngIf="!isEditMode()">
+          <label class="form-label">
+            <span class="material-icons label-icon">person</span>
+            Sales Executive
+            <span class="required">*</span>
+          </label>
+          <select formControlName="userId" class="form-select">
+            <option value="">-- Select Sales Executive --</option>
+            <option *ngFor="let exec of salesExecutives()" [value]="exec.userId">
+              {{ exec.fullName }} - {{ exec.email }}
+            </option>
+          </select>
+          <span class="error-message" *ngIf="targetForm.get('userId')?.touched && targetForm.get('userId')?.errors?.['required']">
+            Sales Executive is required
+          </span>
+        </div>
+
+        <!-- Target Period -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">calendar_month</span>
+            Target Period
+            <span class="required">*</span>
+          </label>
+          <div class="period-selector">
+            <label class="period-option">
+              <input
+                type="radio"
+                formControlName="targetPeriod"
+                value="MONTHLY"
+                class="period-radio"
+              />
+              <div class="period-content">
+                <span class="material-icons period-icon">event</span>
+                <span class="period-label">MONTHLY</span>
+              </div>
+            </label>
+            <label class="period-option">
+              <input
+                type="radio"
+                formControlName="targetPeriod"
+                value="QUARTERLY"
+                class="period-radio"
+              />
+              <div class="period-content">
+                <span class="material-icons period-icon">calendar_view_month</span>
+                <span class="period-label">QUARTERLY</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Target Values Row -->
+        <div class="form-row">
+          <!-- Target Leads -->
+          <div class="form-group">
+            <label class="form-label">
+              <span class="material-icons label-icon">groups</span>
+              Target Leads
+              <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              formControlName="targetLeads"
+              class="form-input"
+              placeholder="Enter target leads"
+              min="1"
+            />
+            <span class="error-message" *ngIf="targetForm.get('targetLeads')?.touched && targetForm.get('targetLeads')?.errors?.['required']">
+              Target leads is required
+            </span>
+            <span class="error-message" *ngIf="targetForm.get('targetLeads')?.touched && targetForm.get('targetLeads')?.errors?.['min']">
+              Minimum 1 lead required
+            </span>
+          </div>
+
+          <!-- Target Enrollments -->
+          <div class="form-group">
+            <label class="form-label">
+              <span class="material-icons label-icon">school</span>
+              Target Enrollments
+              <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              formControlName="targetEnrollments"
+              class="form-input"
+              placeholder="Enter target enrollments"
+              min="1"
+            />
+            <span class="error-message" *ngIf="targetForm.get('targetEnrollments')?.touched && targetForm.get('targetEnrollments')?.errors?.['required']">
+              Target enrollments is required
+            </span>
+            <span class="error-message" *ngIf="targetForm.get('targetEnrollments')?.touched && targetForm.get('targetEnrollments')?.errors?.['min']">
+              Minimum 1 enrollment required
+            </span>
+          </div>
+        </div>
+
+        <!-- Target Revenue -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">currency_rupee</span>
+            Target Revenue (₹)
+            <span class="required">*</span>
+          </label>
+          <input
+            type="number"
+            formControlName="targetRevenue"
+            class="form-input"
+            placeholder="Enter target revenue"
+            min="1000"
+          />
+          <span class="error-message" *ngIf="targetForm.get('targetRevenue')?.touched && targetForm.get('targetRevenue')?.errors?.['required']">
+            Target revenue is required
+          </span>
+          <span class="error-message" *ngIf="targetForm.get('targetRevenue')?.touched && targetForm.get('targetRevenue')?.errors?.['min']">
+            Minimum revenue ₹1000
+          </span>
+        </div>
+
+        <!-- Date Range -->
+        <div class="form-row">
+          <!-- Start Date -->
+          <div class="form-group">
+            <label class="form-label">
+              <span class="material-icons label-icon">event_available</span>
+              Start Date
+              <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              formControlName="startDate"
+              class="form-input"
+            />
+            <span class="error-message" *ngIf="targetForm.get('startDate')?.touched && targetForm.get('startDate')?.errors?.['required']">
+              Start date is required
+            </span>
+          </div>
+
+          <!-- End Date -->
+          <div class="form-group">
+            <label class="form-label">
+              <span class="material-icons label-icon">event_busy</span>
+              End Date
+              <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              formControlName="endDate"
+              class="form-input"
+            />
+            <span class="error-message" *ngIf="targetForm.get('endDate')?.touched && targetForm.get('endDate')?.errors?.['required']">
+              End date is required
+            </span>
+          </div>
+        </div>
+
+        <!-- Remarks -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">notes</span>
+            Remarks
+          </label>
+          <textarea
+            formControlName="remarks"
+            class="form-textarea"
+            rows="4"
+            placeholder="Enter any additional notes or remarks..."
+            maxlength="500"
+          ></textarea>
+          <span class="char-count">
+            {{ targetForm.get('remarks')?.value?.length || 0 }}/500
+          </span>
+        </div>
+
+      </ng-container>
+
+      <!-- ==================== ACHIEVEMENT MODE ==================== -->
+      <ng-container *ngIf="isAchievementMode()">
+        
+        <!-- Achievement Values Row -->
+        <div class="form-row">
+          <!-- Achieved Leads -->
+          <div class="form-group">
+            <label class="form-label">
+              <span class="material-icons label-icon">groups</span>
+              Achieved Leads
+              <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              formControlName="achievedLeads"
+              class="form-input"
+              placeholder="Enter achieved leads"
+              min="0"
+            />
+            <span class="help-text">Target: {{ currentTarget()?.targetLeads }}</span>
+            <span class="error-message" *ngIf="targetForm.get('achievedLeads')?.touched && targetForm.get('achievedLeads')?.errors?.['required']">
+              Achieved leads is required
+            </span>
+            <span class="error-message" *ngIf="targetForm.get('achievedLeads')?.touched && targetForm.get('achievedLeads')?.errors?.['min']">
+              Cannot be negative
+            </span>
+          </div>
+
+          <!-- Achieved Enrollments -->
+          <div class="form-group">
+            <label class="form-label">
+              <span class="material-icons label-icon">school</span>
+              Achieved Enrollments
+              <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              formControlName="achievedEnrollments"
+              class="form-input"
+              placeholder="Enter achieved enrollments"
+              min="0"
+            />
+            <span class="help-text">Target: {{ currentTarget()?.targetEnrollments }}</span>
+            <span class="error-message" *ngIf="targetForm.get('achievedEnrollments')?.touched && targetForm.get('achievedEnrollments')?.errors?.['required']">
+              Achieved enrollments is required
+            </span>
+            <span class="error-message" *ngIf="targetForm.get('achievedEnrollments')?.touched && targetForm.get('achievedEnrollments')?.errors?.['min']">
+              Cannot be negative
+            </span>
+          </div>
+        </div>
+
+        <!-- Achieved Revenue -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">currency_rupee</span>
+            Achieved Revenue (₹)
+            <span class="required">*</span>
+          </label>
+          <input
+            type="number"
+            formControlName="achievedRevenue"
+            class="form-input"
+            placeholder="Enter achieved revenue"
+            min="0"
+          />
+          <span class="help-text">Target: ₹{{ currentTarget()?.targetRevenue | number }}</span>
+          <span class="error-message" *ngIf="targetForm.get('achievedRevenue')?.touched && targetForm.get('achievedRevenue')?.errors?.['required']">
+            Achieved revenue is required
+          </span>
+          <span class="error-message" *ngIf="targetForm.get('achievedRevenue')?.touched && targetForm.get('achievedRevenue')?.errors?.['min']">
+            Cannot be negative
+          </span>
+        </div>
+
+        <!-- Progress Preview (Achievement Mode) -->
+        <div class="info-section" *ngIf="currentTarget()">
+          <div class="info-header">
+            <span class="material-icons">analytics</span>
+            <span>Achievement Progress</span>
+          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Leads Progress:</span>
+              <span class="info-value">
+                {{ getProgressPercentage(targetForm.get('achievedLeads')?.value, currentTarget()?.targetLeads) | number:'1.0-1' }}%
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Enrollments Progress:</span>
+              <span class="info-value">
+                {{ getProgressPercentage(targetForm.get('achievedEnrollments')?.value, currentTarget()?.targetEnrollments) | number:'1.0-1' }}%
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Revenue Progress:</span>
+              <span class="info-value highlight">
+                {{ getProgressPercentage(targetForm.get('achievedRevenue')?.value, currentTarget()?.targetRevenue) | number:'1.0-1' }}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </ng-container>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-icons">close</span>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="targetForm.invalid || isSubmitting()"
+        >
+          <span class="material-icons" *ngIf="!isSubmitting()">
+            {{ isAchievementMode() ? 'task_alt' : (isEditMode() ? 'save' : 'add_circle') }}
+          </span>
+          <div class="spinner-small" *ngIf="isSubmitting()"></div>
+          {{ isSubmitting() ? 'Saving...' : (isAchievementMode() ? 'Update Achievement' : (isEditMode() ? 'Update Target' : 'Create Target')) }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

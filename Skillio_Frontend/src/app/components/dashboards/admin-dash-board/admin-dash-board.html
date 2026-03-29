@@ -1,0 +1,454 @@
+<div
+  class="admin-layout"
+  [class.sidebar-collapsed]="isSidebarCollapsed() && !isHovering()"
+  [class.sidebar-hovering]="isHovering()"
+>
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside
+    class="sidebar"
+    [class.mobile-open]="isMobileMenuOpen()"
+    (mouseenter)="onMouseEnter()"
+    (mouseleave)="onMouseLeave()"
+  >
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      <!-- Full Logo (Expanded) -->
+      <div class="logo" *ngIf="!isSidebarCollapsed() || isHovering()">
+        <span class="material-symbols-outlined">supervisor_account</span>
+        <span class="logo-text">Admin Panel</span>
+        <span class="version-badge">v1.0</span>
+      </div>
+
+      <!-- Collapsed Logo (Icon Only) -->
+      <div class="logo-collapsed" *ngIf="isSidebarCollapsed() && !isHovering()">
+        <span class="material-icons logo-icon">school</span>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="sidebar-nav">
+      <a
+        *ngFor="let item of filteredNavItems()"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.route === '/admin-dashboard' }"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        [title]="item.label"
+      >
+        <span class="material-icons nav-icon">{{ item.icon }}</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">
+          {{ item.label }}
+        </span>
+        <span class="nav-badge" *ngIf="item.badge && (!isSidebarCollapsed() || isHovering())">
+          {{ item.badge }}
+        </span>
+      </a>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <!-- Theme Toggle Button -->
+      <button
+        class="footer-btn"
+        (click)="themeService.toggleTheme()"
+        [title]="themeService.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+      >
+        <span class="material-icons footer-icon">
+          {{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}
+        </span>
+        <span class="footer-label" *ngIf="!isSidebarCollapsed() || isHovering()">
+          {{ themeService.isDark() ? 'Light Mode' : 'Dark Mode' }}
+        </span>
+      </button>
+
+      <!-- Logout Button -->
+      <button class="footer-btn logout-btn" (click)="logout()" title="Logout">
+        <span class="material-icons footer-icon">logout</span>
+        <span class="footer-label" *ngIf="!isSidebarCollapsed() || isHovering()"> Logout </span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <!-- Left Section -->
+      <div class="top-bar-left">
+        <!-- Mobile Menu Toggle (Shows on Mobile) -->
+        <button
+          class="mobile-menu-toggle"
+          (click)="toggleMobileMenu()"
+          title="Menu"
+          aria-label="Toggle mobile menu"
+        >
+          <span class="material-icons">menu</span>
+        </button>
+
+        <!-- Sidebar Toggle (Shows on Desktop) -->
+        <button
+          class="sidebar-toggle"
+          (click)="toggleSidebar()"
+          title="Toggle Sidebar"
+          aria-label="Toggle sidebar"
+        >
+          <span class="material-icons">
+            {{ isSidebarCollapsed() ? 'menu' : 'menu_open' }}
+          </span>
+        </button>
+
+        <!-- Page Title -->
+        <div class="page-info">
+          <h2 class="page-title">Dashboard</h2>
+        </div>
+      </div>
+
+      <!-- Right Section -->
+      <div class="top-bar-right">
+        <!-- Search Button -->
+        <button class="top-bar-btn search-btn" title="Search">
+          <span class="material-icons">search</span>
+        </button>
+
+        <!-- Notifications Button -->
+        <!-- <button class="top-bar-btn" title="Notifications">
+          <span class="material-icons">notifications</span>
+        </button> -->
+        <app-notification></app-notification>
+
+        <!-- User Profile -->
+        <div class="user-profile" title="View profile">
+          <div class="user-info">
+            <span class="user-name">{{ currentUser().name }}</span>
+          </div>
+          <div class="user-avatar">
+            {{ getUserInitials() }}
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area (Scrollable) -->
+    <main class="content-area">
+      <!-- Dashboard Content - Only show on exact /admin-dashboard route -->
+      <div class="dashboard-content" *ngIf="isExactDashboardRoute()">
+        <!-- Loading State -->
+        <div *ngIf="isLoading()" class="loading-container">
+          <div class="spinner"></div>
+          <p>Loading dashboard data...</p>
+        </div>
+
+        <!-- Stats Cards Row -->
+        <div class="stats-row" *ngIf="!isLoading()">
+          <div *ngFor="let stat of statsCards()" class="stat-card">
+            <div class="stat-icon-wrapper" [style.background]="stat.iconBg">
+              <span class="material-icons stat-icon">{{ stat.icon }}</span>
+            </div>
+            <div class="stat-info">
+              <p class="stat-label">{{ stat.label }}</p>
+              <h3 class="stat-value">{{ stat.value }}</h3>
+              <p class="stat-trend" [class.trend-up]="stat.trendUp">
+                <span class="material-icons trend-icon">
+                  {{ stat.trendUp ? 'trending_up' : 'trending_down' }}
+                </span>
+                {{ stat.trend }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid" *ngIf="!isLoading()">
+          <!-- Sales Executives Card -->
+          <div class="card sales-executives-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="material-icons card-title-icon">people</span>
+                Sales Executives Performance
+              </h3>
+              <button class="icon-btn" title="Refresh" (click)="loadDashboardData()">
+                <span class="material-icons">refresh</span>
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="sales-table-wrapper" *ngIf="salesExecutives().length > 0">
+                <table class="sales-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Total Leads</th>
+                      <th>Converted</th>
+                      <th>Enrollments</th>
+                      <th>Commission</th>
+                      <th>Contact</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let exec of salesExecutives()">
+                      <td>
+                        <div class="exec-name-cell">
+                          <div class="exec-avatar" [style.background]="exec.avatarBg">
+                            {{ exec.avatar }}
+                          </div>
+                          <span class="exec-name">{{ exec.fullName }}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge badge-primary">{{ exec.totalLeads || 0 }}</span>
+                      </td>
+                      <td>
+                        <span class="badge badge-success">{{ exec.convertedLeads || 0 }}</span>
+                      </td>
+                      <td>
+                        <span class="badge badge-info">{{ exec.totalEnrollments || 0 }}</span>
+                      </td>
+                      <td class="commission-cell">
+                        ₹ {{ formatCurrency(exec.totalCommission || 0) }}
+                      </td>
+                      <td class="contact-cell">{{ exec.email }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="salesExecutives().length === 0" class="empty-state">
+                <span class="material-icons empty-icon">person_off</span>
+                <p>No sales executives found</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lead Status Distribution Card -->
+          <div class="card lead-status-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="material-icons card-title-icon">donut_large</span>
+                Lead Status Distribution
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="lead-status-chart" *ngIf="leadStatusData().length > 0">
+                <div *ngFor="let status of leadStatusData()" class="status-item">
+                  <div class="status-info">
+                    <div class="status-label">
+                      <span class="status-dot" [style.background]="status.color"></span>
+                      <span class="status-name">{{ status.status }}</span>
+                    </div>
+                    <span class="status-count">{{ status.count }}</span>
+                  </div>
+                  <div class="status-bar-wrapper">
+                    <div
+                      class="status-bar"
+                      [style.width.%]="status.percentage"
+                      [style.background]="status.color"
+                    ></div>
+                  </div>
+                  <span class="status-percentage">{{ status.percentage.toFixed(1) }}%</span>
+                </div>
+              </div>
+              <div *ngIf="leadStatusData().length === 0" class="empty-state">
+                <span class="material-icons empty-icon">leaderboard</span>
+                <p>No lead data available</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Enrollments Card -->
+          <div class="card recent-enrollments-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="material-icons card-title-icon">assignment_turned_in</span>
+                Recent Enrollments
+              </h3>
+              <a [routerLink]="['/admin-dashboard/enrollments']" class="view-all-link">
+                View All
+                <span class="material-icons">arrow_forward</span>
+              </a>
+            </div>
+            <div class="card-body">
+              <div class="enrollments-list" *ngIf="recentEnrollments().length > 0">
+                <div *ngFor="let enrollment of recentEnrollments()" class="enrollment-item">
+                  <div class="enrollment-icon">
+                    <span class="material-icons">school</span>
+                  </div>
+                  <div class="enrollment-details">
+                    <h4 class="enrollment-student">{{ enrollment.studentName }}</h4>
+                    <p class="enrollment-course">
+                      {{ enrollment.courseName }} - {{ enrollment.batchName }}
+                    </p>
+                    <p class="enrollment-date">
+                      <span class="material-icons date-icon">event</span>
+                      {{ enrollment.enrollmentDate | date : 'dd MMM yyyy' }}
+                    </p>
+                  </div>
+<div class="enrollment-payment">
+  <!-- Final Fees -->
+  <p class="payment-amount">
+    ₹ {{ formatCurrency((enrollment.totalCourseFees || 0) - (enrollment.discountAmount || 0)) }}
+  </p>
+  
+  <!-- Show discount percentage if discount exists -->
+  <span class="discount-info" *ngIf="enrollment.discountAmount && enrollment.discountAmount > 0">
+    <del class="original-amount">₹{{ formatCurrency(enrollment.totalCourseFees) }}</del>
+    
+    <span class="discount-badge">
+      {{ calculateDiscountPercentage(enrollment.totalCourseFees, enrollment.discountAmount) }}% OFF
+    </span>
+  </span>
+</div>
+
+
+
+                </div>
+              </div>
+              <div *ngIf="recentEnrollments().length === 0" class="empty-state">
+                <span class="material-icons empty-icon">assignment_late</span>
+                <p>No recent enrollments</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Statistics Card -->
+          <div class="card payment-stats-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="material-icons card-title-icon">payments</span>
+                Payment Statistics
+              </h3>
+              <a [routerLink]="['/admin-dashboard/payments']" class="view-all-link">
+                View All
+                <span class="material-icons">arrow_forward</span>
+              </a>
+            </div>
+            <div class="card-body">
+              <div class="payment-stats-grid" *ngIf="paymentStats().totalPayments > 0">
+                <!-- Total Payments Received -->
+                <div class="stat-item stat-primary">
+                  <div class="stat-icon-box">
+                    <span class="material-icons">receipt_long</span>
+                  </div>
+                  <div class="stat-details">
+                    <p class="stat-label">Total Payments Received</p>
+                    <h2 class="stat-number">{{ paymentStats().totalPayments }}</h2>
+                    <p class="stat-subtitle">All time payments</p>
+                  </div>
+                </div>
+
+                <!-- Total Amount -->
+                <div class="stat-item stat-success">
+                  <div class="stat-icon-box">
+                    <span class="material-icons">currency_rupee</span>
+                  </div>
+                  <div class="stat-details">
+                    <p class="stat-label">Total Revenue</p>
+                    <h2 class="stat-number">₹ {{ formatCurrency(paymentStats().totalAmount) }}</h2>
+                    <p class="stat-subtitle">Total collected</p>
+                  </div>
+                </div>
+
+                <!-- Today's Payments -->
+                <div class="stat-item stat-info">
+                  <div class="stat-icon-box">
+                    <span class="material-icons">today</span>
+                  </div>
+                  <div class="stat-details">
+                    <p class="stat-label">Today's Payments</p>
+                    <h2 class="stat-number">{{ paymentStats().todayPayments }}</h2>
+                    <p class="stat-subtitle">Received today</p>
+                  </div>
+                </div>
+
+                <!-- This Month -->
+                <div class="stat-item stat-warning">
+                  <div class="stat-icon-box">
+                    <span class="material-icons">calendar_month</span>
+                  </div>
+                  <div class="stat-details">
+                    <p class="stat-label">This Month</p>
+                    <h2 class="stat-number">{{ paymentStats().thisMonthPayments }}</h2>
+                    <p class="stat-subtitle">Current month</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div *ngIf="paymentStats().totalPayments === 0" class="empty-state">
+                <span class="material-icons empty-icon">payment</span>
+                <p>No payment data available</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Batches Card -->
+          <div class="card active-batches-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="material-icons card-title-icon">groups</span>
+                Active Batches
+              </h3>
+              <a [routerLink]="['/admin-dashboard/batches']" class="view-all-link">
+                View All
+                <span class="material-icons">arrow_forward</span>
+              </a>
+            </div>
+            <div class="card-body">
+              <div class="batches-list" *ngIf="activeBatches().length > 0">
+                <div *ngFor="let batch of activeBatches()" class="batch-item">
+                  <div class="batch-header">
+                    <div class="batch-name-section">
+                      <h4 class="batch-name">{{ batch.batchName }}</h4>
+                      <span class="batch-code">{{ batch.batchCode }}</span>
+                    </div>
+                    <span
+                      class="batch-status-badge"
+                      [class.status-ongoing]="batch.status === 'ONGOING'"
+                      [class.status-upcoming]="batch.status === 'UPCOMING'"
+                    >
+                      {{ batch.status }}
+                    </span>
+                  </div>
+                  <p class="batch-course">{{ batch.courseName }}</p>
+                  <div class="batch-info-row">
+                    <div class="batch-info-item">
+                      <span class="material-icons info-icon">person</span>
+                      <span>{{ batch.instructor }}</span>
+                    </div>
+                    <div class="batch-info-item">
+                      <span class="material-icons info-icon">people</span>
+                      <span>{{ batch.enrolledCount }} enrolled</span>
+                    </div>
+                  </div>
+                  <div class="batch-info-row">
+                    <div class="batch-info-item">
+                      <span class="material-icons info-icon">schedule</span>
+                      <span>{{ batch.timing }}</span>
+                    </div>
+                    <div class="batch-info-item">
+                      <span class="material-icons info-icon">videocam</span>
+                      <span>{{ batch.modeOfClass }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="activeBatches().length === 0" class="empty-state">
+                <span class="material-icons empty-icon">group_off</span>
+                <p>No active batches</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Router Outlet for Child Routes -->
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <!-- Mobile Overlay (Dark backdrop when sidebar is open on mobile) -->
+  <div
+    class="mobile-overlay"
+    *ngIf="isMobileMenuOpen()"
+    (click)="isMobileMenuOpen.set(false)"
+    aria-hidden="true"
+  ></div>
+</div>

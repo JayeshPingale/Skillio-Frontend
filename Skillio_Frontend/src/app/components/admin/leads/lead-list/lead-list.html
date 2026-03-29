@@ -1,0 +1,643 @@
+<div class="lead-list-wrapper">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">groups</span>
+        Lead Management
+      </h1>
+      <p class="page-subtitle">Track and manage all customer leads</p>
+    </div>
+    <div class="header-right">
+      <button *appHasPermission="'LEAD_CREATE'" class="btn-create" (click)="navigateToCreate()">
+        <span class="material-icons btn-icon">add_circle</span>
+        Add New Lead
+      </button>
+    </div>
+  </div>
+
+   <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-icons">assessment</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Leads</span>
+        <span class="stat-value">{{ totalLeads() }}</span>
+      </div>
+    </div>
+    <div class="stat-card stat-new">
+      <div class="stat-icon">
+        <span class="material-icons">fiber_new</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">New</span>
+        <span class="stat-value">{{ newLeads() }}</span>
+      </div>
+    </div>
+    <div class="stat-card stat-interested">
+      <div class="stat-icon">
+        <span class="material-icons">star</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Interested</span>
+        <span class="stat-value">{{ interestedLeads() }}</span>
+      </div>
+    </div>
+    <div class="stat-card stat-converted">
+      <div class="stat-icon">
+        <span class="material-icons">check_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Converted</span>
+        <span class="stat-value">{{ convertedLeads() }}</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Search & Filter Section -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by name, contact, or course..."
+        [value]="searchTerm()"
+        (input)="searchTerm.set($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select 
+      [value]="selectedStatus()"
+      (change)="selectedStatus.set($any($event.target).value)"
+      class="status-filter"
+    >
+      <option *ngFor="let status of statusOptions" [value]="status">
+        {{ status === 'ALL' ? 'All Status' : status }}
+      </option>
+    </select>
+
+    <select 
+      [value]="selectedInterestLevel()"
+      (change)="selectedInterestLevel.set($any($event.target).value)"
+      class="interest-filter"
+    >
+      <option *ngFor="let level of interestLevelOptions" [value]="level">
+        {{ level === 'ALL' ? 'All Interest Levels' : level }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading leads...</p>
+  </div>
+
+  <!-- Leads Table -->
+  <div *ngIf="!isLoading()" class="table-container">
+    <table class="leads-table">
+      <thead>
+        <tr>
+          <th class="th-id">
+            <span class="material-icons th-icon"></span>
+            ID
+          </th>
+          <th class="th-name">
+            <span class="material-icons th-icon">person</span>
+            LEAD NAME
+          </th>
+          <th class="th-contact">
+            <span class="material-icons th-icon">phone</span>
+            CONTACT NO
+          </th>
+          <th class="th-course">
+            <span class="material-icons th-icon">school</span>
+            COURSE INTERESTED
+          </th>
+          <th class="th-interest">
+            <span class="material-icons th-icon">trending_up</span>
+            LEVEL OF INTEREST
+          </th>
+          <th class="th-status">
+            <span class="material-icons th-icon">flag</span>
+            STATUS
+          </th>
+          <th class="th-actions">
+            <span class="material-icons th-icon">settings</span>
+            ACTIONS
+          </th>
+        </tr>
+      </thead>
+            <tbody>
+        <tr *ngFor="let lead of paginatedLeads(); let i = index" class="table-row">
+          <!-- ✅ SERIAL NUMBER (Frontend Generated) -->
+          <td class="td-id">
+            <span class="lead-id-badge">{{ ((currentPage() - 1) * itemsPerPage()) + i + 1 }}</span>
+          </td>
+
+          <!-- Lead Name -->
+          <td class="td-name">
+            <div class="name-cell">
+              <div class="avatar">
+                <span class="material-icons avatar-icon">person</span>
+              </div>
+              <span class="lead-name-text">{{ lead.fullName }}</span>
+            </div>
+          </td>
+
+          <!-- Contact -->
+          <td class="td-contact">
+            <div class="contact-cell">
+              <span class="material-icons cell-icon">phone</span>
+              <span>{{ lead.contactNumber }}</span>
+            </div>
+          </td>
+
+          <!-- Course Interested -->
+          <td class="td-course">
+            <span class="course-badge">{{ lead.courseInterested }}</span>
+          </td>
+
+          <!-- Level of Interest -->
+          <td class="td-interest">
+            <span class="interest-badge" [ngClass]="getInterestLevelClass(lead.interestLevel)">
+              <span class="material-icons interest-icon">
+                {{ lead.interestLevel === 'HIGH' ? 'trending_up' : lead.interestLevel === 'MEDIUM' ? 'remove' : 'trending_down' }}
+              </span>
+              {{ lead.interestLevel }}
+            </span>
+          </td>
+
+          <!-- Status -->
+          <td class="td-status">
+            <span class="status-badge" [ngClass]="getStatusClass(lead.status)">
+              <span class="material-icons status-icon">{{ getStatusIcon(lead.status) }}</span>
+              {{ lead.status }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td class="td-actions">
+            <div class="actions-cell">
+              <!-- Assign Lead -->
+              <button
+                *ngIf="authService.isAdmin() && authService.hasPermission('LEAD_UPDATE')"
+                class="btn-action btn-assign"
+                (click)="goToAssign(lead.leadId)"
+                title="Assign Lead"
+              >
+                <span class="material-icons">person_add</span>
+              </button>
+
+              <!-- Edit Lead -->
+              <button 
+                *appHasPermission="'LEAD_UPDATE'"
+                class="btn-action btn-edit"
+                (click)="navigateToEdit(lead.leadId)"
+                title="Edit Lead"
+              >
+                <span class="material-icons">edit</span>
+              </button>
+
+              <!-- Delete Lead -->
+              <button 
+                *appHasPermission="'LEAD_DELETE'"
+                class="btn-action btn-delete"
+                (click)="deleteLead(lead.leadId, lead.fullName)"
+                title="Delete Lead"
+              >
+                <span class="material-icons">delete</span>
+              </button>
+
+              <!-- Eye View (NEW) -->
+              <button 
+                *appHasAnyPermission="['LEAD_READ','LEAD_LIST']"
+                class="btn-action btn-view"
+                (click)="openViewModal(lead)"
+                title="View Details"
+              >
+                <span class="material-icons">visibility</span>
+              </button>
+
+              <!-- Remarks (NEW) -->
+              <button 
+                *appHasAnyPermission="['FOLLOW_UP_READ','FOLLOW_UP_LIST']"
+                class="btn-action btn-remarks"
+                (click)="openRemarksModal(lead)"
+                title="View Remarks & Follow-ups"
+              >
+                <span class="material-icons">comment</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- No Data Row -->
+        <tr *ngIf="paginatedLeads().length === 0" class="no-data-row">
+          <td colspan="7" class="no-data-cell">
+            <span class="material-icons no-data-icon">folder_open</span>
+            <p>No leads found matching your criteria</p>
+          </td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div *ngIf="!isLoading() && totalPages() > 1" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ ((currentPage() - 1) * itemsPerPage()) + 1 }} to {{ Math.min(currentPage() * itemsPerPage(), totalItems()) }} of {{ totalItems() }} leads
+    </div>
+
+    <div class="pagination-controls">
+      <button 
+        class="pagination-btn pagination-first"
+        (click)="goToPage(1)"
+        [disabled]="currentPage() === 1"
+        title="First Page"
+      >
+        <span class="material-icons">first_page</span>
+      </button>
+
+      <button 
+        class="pagination-btn pagination-prev"
+        (click)="goToPage(currentPage() - 1)"
+        [disabled]="currentPage() === 1"
+        title="Previous Page"
+      >
+        <span class="material-icons">chevron_left</span>
+      </button>
+
+      <div class="pagination-numbers">
+        <button 
+          *ngFor="let page of [].constructor(totalPages()); let i = index"
+          class="pagination-number"
+          [class.active]="(i + 1) === currentPage()"
+          (click)="goToPage(i + 1)"
+        >
+          {{ i + 1 }}
+        </button>
+      </div>
+
+      <button 
+        class="pagination-btn pagination-next"
+        (click)="goToPage(currentPage() + 1)"
+        [disabled]="currentPage() === totalPages()"
+        title="Next Page"
+      >
+        <span class="material-icons">chevron_right</span>
+      </button>
+
+      <button 
+        class="pagination-btn pagination-last"
+        (click)="goToPage(totalPages())"
+        [disabled]="currentPage() === totalPages()"
+        title="Last Page"
+      >
+        <span class="material-icons">last_page</span>
+      </button>
+    </div>
+
+    <div class="items-per-page">
+      <label>Items per page:</label>
+      <select 
+        [value]="itemsPerPage()"
+        (change)="changeItemsPerPage($any($event.target).value)"
+        class="items-select"
+      >
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+  </div>
+</div>
+<!-- ==================== VIEW DETAILS MODAL ==================== -->
+<div *ngIf="showViewModal()" class="modal-overlay" (click)="closeViewModal()">
+  <div class="modal-container modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <span class="material-icons modal-icon">visibility</span>
+        Lead Details - {{ selectedLead()?.fullName }}
+      </h2>
+      <button class="modal-close" (click)="closeViewModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body modal-view-body" *ngIf="selectedLead()">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">tag</span>
+            Lead ID
+          </span>
+          <span class="detail-value">#{{ selectedLead()?.leadId }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">person</span>
+            Full Name
+          </span>
+          <span class="detail-value">{{ selectedLead()?.fullName }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">phone</span>
+            Contact Number
+          </span>
+          <span class="detail-value">{{ selectedLead()?.contactNumber }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">email</span>
+            Email
+          </span>
+          <span class="detail-value">{{ selectedLead()?.email || 'N/A' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">school</span>
+            Course Interested
+          </span>
+          <span class="detail-value">{{ selectedLead()?.courseInterested }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">account_balance</span>
+            College Name
+          </span>
+          <span class="detail-value">{{ selectedLead()?.collegeName || 'N/A' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">workspace_premium</span>
+            Qualification
+          </span>
+          <span class="detail-value">{{ selectedLead()?.qualification || 'N/A' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">work</span>
+            Experience
+          </span>
+          <span class="detail-value">{{ selectedLead()?.experience || 'N/A' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">trending_up</span>
+            Interest Level
+          </span>
+          <span class="detail-value">
+            <span class="interest-badge" [ngClass]="getInterestLevelClass(selectedLead()?.interestLevel || '')">
+              {{ selectedLead()?.interestLevel }}
+            </span>
+          </span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">flag</span>
+            Status
+          </span>
+          <span class="detail-value">
+            <span class="status-badge" [ngClass]="getStatusClass(selectedLead()?.status || '')">
+              {{ selectedLead()?.status }}
+            </span>
+          </span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">source</span>
+            Lead Source
+          </span>
+          <span class="detail-value">{{ selectedLead()?.sourceName }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">assignment_ind</span>
+            Assigned To
+          </span>
+          <span class="detail-value">{{ selectedLead()?.assignedToUserName || 'Unassigned' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">event</span>
+            Created Date
+          </span>
+          <span class="detail-value">{{ formatDateTime(selectedLead()?.createdDate || '') }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">phone_in_talk</span>
+            Last Contact Date
+          </span>
+          <span class="detail-value">{{ formatDate(selectedLead()?.lastContactDate || '') }}</span>
+        </div>
+
+        <div class="detail-item detail-full">
+          <span class="detail-label">
+            <span class="material-icons detail-icon">comment</span>
+            Comments
+          </span>
+          <span class="detail-value detail-comments">{{ selectedLead()?.comments || 'No comments' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeViewModal()">
+        <span class="material-icons">close</span>
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== REMARKS & FOLLOW-UPS MODAL ==================== -->
+<div *ngIf="showRemarksModal()" class="modal-overlay" (click)="closeRemarksModal()">
+  <div class="modal-container modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <span class="material-icons modal-icon">comment</span>
+        Remarks & Follow-ups - {{ selectedLead()?.fullName }}
+      </h2>
+      <button class="modal-close" (click)="closeRemarksModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body modal-remarks-body" *ngIf="selectedLead()">
+      <!-- Lead Comments Section -->
+      <div class="remarks-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="material-icons section-icon">notes</span>
+            Lead Comments
+          </h3>
+        </div>
+        <div class="remarks-content">
+          <p class="remarks-text">{{ selectedLead()?.comments || 'No comments available' }}</p>
+        </div>
+      </div>
+
+      <!-- Follow-ups Section -->
+      <div class="followups-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="material-icons section-icon">checklist</span>
+            Follow-up History ({{ leadFollowUps().length }})
+          </h3>
+          <!-- ✅ CONDITIONAL: Show button only for NON-CONVERTED leads -->
+          <button 
+            *ngIf="selectedLead()?.status !== 'CONVERTED'" 
+            class="btn-add-followup" 
+            (click)="navigateToAddFollowUp()"
+          >
+            <span class="material-icons">add</span>
+            Add Follow-up
+          </button>
+          <!-- ✅ Show CONVERTED message if lead is converted -->
+          <div *ngIf="selectedLead()?.status === 'CONVERTED'" class="converted-badge">
+            <span class="material-icons">check_circle</span>
+            Lead Converted - No follow-up needed
+          </div>
+        </div>
+
+        <div *ngIf="leadFollowUps().length === 0" class="no-followups">
+          <span class="material-icons no-followups-icon">event_busy</span>
+          <p class="no-followups-text">No follow-ups recorded for this lead</p>
+          <!-- ✅ CONDITIONAL: Create button only for non-converted -->
+          <button 
+            *ngIf="selectedLead()?.status !== 'CONVERTED'" 
+            class="btn-create-first" 
+            (click)="navigateToAddFollowUp()"
+          >
+            <span class="material-icons">add_circle</span>
+            Create First Follow-up
+          </button>
+        </div>
+
+        <div *ngIf="leadFollowUps().length > 0" class="followups-timeline">
+          <div *ngFor="let followUp of leadFollowUps(); let i = index" class="followup-item">
+            <div class="followup-indicator">
+              <span class="followup-number">#{{ i + 1 }}</span>
+              <div class="followup-line" *ngIf="i < leadFollowUps().length - 1"></div>
+            </div>
+            <div class="followup-content">
+              <div class="followup-header">
+                <div class="followup-date-section">
+                  <span class="material-icons date-icon">event</span>
+                  <span class="followup-date">{{ formatDateTime(followUp.followUpDate.toString()) }}</span>
+                </div>
+                <span class="followup-status" [ngClass]="'status-' + followUp.status.toLowerCase()">
+                  {{ followUp.status }}
+                </span>
+              </div>
+              <div class="followup-type">
+                <span class="material-icons type-icon">{{ getFollowUpIcon(followUp.followUpType) }}</span>
+                <span class="type-text">{{ followUp.followUpType }}</span>
+              </div>
+              <div class="followup-notes">
+                <span class="material-icons notes-icon">chat</span>
+                <span class="notes-text">{{ followUp.notes }}</span>
+              </div>
+              <div class="followup-meta">
+                <span class="material-icons meta-icon">person</span>
+                <span class="meta-text">Followed up by: <strong>{{ followUp.createdByUserName }}</strong></span>
+              </div>
+              <div *ngIf="followUp.nextFollowUpDate" class="followup-next">
+                <span class="material-icons next-icon">schedule</span>
+                <span class="next-text">Next Follow-up: {{ formatDate(followUp.nextFollowUpDate.toString()) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeRemarksModal()">
+        <span class="material-icons">close</span>
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ASSIGN LEAD MODAL ==================== -->
+<!-- <div *ngIf="showAssignModal()" class="modal-overlay" (click)="closeAssignModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <span class="material-icons modal-icon">person_add</span>
+        Assign Lead
+      </h2>
+      <button class="modal-close" (click)="closeAssignModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="assign-info">
+        <p><strong>Lead:</strong> {{ selectedLead()?.fullName }}</p>
+        <p><strong>Contact:</strong> {{ selectedLead()?.contactNumber }}</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">person</span>
+          Select Sales Executive
+        </label>
+        <select 
+          [value]="selectedUserId()"
+          (change)="selectedUserId.set($any($event.target).value ? Number($any($event.target).value) : null)"
+          class="form-select"
+        >
+          <option value="">-- Select User --</option>
+          <option *ngFor="let user of users()" [value]="user.userId">
+            {{ user.fullName }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeAssignModal()">Cancel</button>
+      <button class="btn-primary" (click)="assignLead()" [disabled]="!selectedUserId()">
+        <span class="material-icons btn-icon">check</span>
+        Assign
+      </button>
+    </div>
+  </div>
+</div> -->

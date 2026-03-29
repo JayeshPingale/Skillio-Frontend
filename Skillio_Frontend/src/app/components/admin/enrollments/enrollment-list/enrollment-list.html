@@ -1,0 +1,340 @@
+<div class="enrollment-list-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">school</span>
+        Enrollment Management
+      </h1>
+      <p class="page-subtitle">
+        <!-- ✅ Dynamic subtitle based on role -->
+        @if (isAdmin()) {
+          Manage all student enrollments and payments
+        } @else if (isSalesExec()) {
+          Manage enrollments created by you
+        } @else {
+          Manage student enrollments
+        }
+      </p>
+    </div>
+    <div class="header-right">
+      <!-- ✅ Show button for both Admin and Sales Exec -->
+      <button class="btn-create" (click)="navigateToCreate()">
+        <span class="material-icons btn-icon">add_circle</span>
+        New Enrollment
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-icons">assessment</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Enrollments</span>
+        <span class="stat-value">{{ stats().total }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-active">
+      <div class="stat-icon">
+        <span class="material-icons">check_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Active</span>
+        <span class="stat-value">{{ stats().active }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-completed">
+      <div class="stat-icon">
+        <span class="material-icons">task_alt</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Completed</span>
+        <span class="stat-value">{{ stats().completed }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-pending">
+      <div class="stat-icon">
+        <span class="material-icons">pause_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">On Hold / Cancelled</span>
+        <span class="stat-value">{{ stats().cancelled + stats().onHold }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by student name, email, course, or batch..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select
+      [value]="selectedStatus()"
+      (change)="updateStatus($any($event.target).value)"
+      class="status-filter"
+    >
+      <option *ngFor="let status of statusOptions" [value]="status">
+        {{ status === 'ALL' ? 'All Status' : status }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading enrollments...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading()" class="table-container">
+    <table class="enrollments-table">
+      <thead>
+        <tr>
+          <th class="th-id">
+            <span class="material-icons th-icon">tag</span>
+            ID
+          </th>
+          <th class="th-student">
+            <span class="material-icons th-icon">person</span>
+            STUDENT
+          </th>
+          <th class="th-course">
+            <span class="material-icons th-icon">book</span>
+            COURSE
+          </th>
+          <th class="th-batch">
+            <span class="material-icons th-icon">groups</span>
+            BATCH
+          </th>
+          <th class="th-date">
+            <span class="material-icons th-icon">event</span>
+            ENROLLMENT DATE
+          </th>
+          <th class="th-amount">
+            <span class="material-icons th-icon">payments</span>
+            FEES
+          </th>
+          <th class="th-status">
+            <span class="material-icons th-icon">flag</span>
+            STATUS
+          </th>
+          <th class="th-actions">
+            <span class="material-icons th-icon">settings</span>
+            ACTIONS
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let enrollment of paginatedEnrollments()" class="table-row">
+          <!-- ID -->
+          <td class="td-id">
+            <span class="enrollment-id-badge">#{{ enrollment.enrollmentId }}</span>
+          </td>
+
+          <!-- Student -->
+          <td class="td-student">
+            <div class="student-cell">
+              <span class="material-icons student-icon">account_circle</span>
+              <div class="student-info">
+                <span class="student-name">{{ enrollment.studentName }}</span>
+                <span class="student-email">{{ enrollment.studentEmail }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Course -->
+          <td class="td-course">
+            <div class="course-cell">
+              <span class="material-icons course-icon">book</span>
+              <span class="course-name">{{ enrollment.courseName }}</span>
+            </div>
+          </td>
+
+          <!-- Batch -->
+          <td class="td-batch">
+            <span class="batch-badge">
+              <span class="material-icons batch-icon">groups</span>
+              {{ enrollment.batchName }}
+            </span>
+          </td>
+
+          <!-- Enrollment Date -->
+          <td class="td-date">
+            <div class="date-cell">
+              <span class="material-icons date-icon">event</span>
+              <span>{{ enrollment.enrollmentDate | date: 'dd MMM yyyy' }}</span>
+            </div>
+          </td>
+
+          <!-- Fees with Discount -->
+          <td class="td-amount">
+            <div class="fee-cell">
+              <!-- Has Discount -->
+              <div *ngIf="hasDiscount(enrollment)" class="fee-with-discount">
+                <div class="original-fee">
+                  <span class="material-icons fee-icon">currency_rupee</span>
+                  <span class="strikethrough">{{ enrollment.totalCourseFees | number }}</span>
+                </div>
+                <div class="final-fee">
+                  <span class="material-icons fee-icon">currency_rupee</span>
+                  <span class="amount-value">{{ calculateFinalFee(enrollment) | number }}</span>
+                </div>
+                <span class="discount-badge">
+                  <span class="material-icons">local_offer</span>
+                  {{ getDiscountText(enrollment) }}
+                </span>
+              </div>
+
+              <!-- No Discount -->
+              <div *ngIf="!hasDiscount(enrollment)" class="fee-no-discount">
+                <span class="material-icons fee-icon">currency_rupee</span>
+                <span class="amount-value">{{ enrollment.totalCourseFees | number }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Status -->
+          <td class="td-status">
+            <span class="status-badge" [ngClass]="getStatusClass(enrollment.status)">
+              <span class="material-icons status-icon">
+                {{ getStatusIcon(enrollment.status) }}
+              </span>
+              {{ enrollment.status }}
+            </span>
+          </td>
+
+          <!-- ✅ Actions - Role-Based Buttons -->
+          <td class="td-actions">
+            <div class="actions-cell">
+              <!-- ✅ ADMIN: Full Access (Edit + Delete) -->
+              @if (isAdmin()) {
+                <button
+                  class="btn-action btn-edit"
+                  (click)="navigateToEdit(enrollment.enrollmentId)"
+                  title="Edit Enrollment"
+                >
+                  <span class="material-icons">edit</span>
+                </button>
+                <button
+                  class="btn-action btn-delete"
+                  (click)="deleteEnrollment(enrollment.enrollmentId, enrollment.studentName)"
+                  title="Delete Enrollment"
+                >
+                  <span class="material-icons">delete</span>
+                </button>
+              }
+
+              <!-- ✅ SALES EXEC: Edit Only (No Delete) -->
+              @else if (isSalesExec()) {
+                <button
+                  class="btn-action btn-edit"
+                  (click)="navigateToEdit(enrollment.enrollmentId)"
+                  title="Edit Enrollment"
+                >
+                  <span class="material-icons">edit</span>
+                </button>
+                <span class="no-delete-text">
+                  <span class="material-icons" style="font-size: 16px; color: #999;">block</span>
+                  No Delete
+                </span>
+              }
+
+              <!-- ✅ DEFAULT: View Only -->
+              @else {
+                <button
+                  class="btn-action btn-view"
+                  (click)="navigateToEdit(enrollment.enrollmentId)"
+                  title="View Enrollment"
+                >
+                  <span class="material-icons">visibility</span>
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+
+        <!-- No Data -->
+        <tr *ngIf="paginatedEnrollments().length === 0" class="no-data-row">
+          <td colspan="8" class="no-data-cell">
+            <span class="material-icons no-data-icon">school_off</span>
+            <p>
+              @if (searchTerm() || selectedStatus() !== 'ALL') {
+                No enrollments found matching your criteria
+              } @else if (isSalesExec()) {
+                You haven't created any enrollments yet
+              } @else {
+                No enrollments available
+              }
+            </p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!isLoading() && totalPages() > 1" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ ((currentPage() - 1) * itemsPerPage()) + 1 }} to {{ Math.min(currentPage() * itemsPerPage(), totalItems()) }} of {{ totalItems() }} enrollments
+    </div>
+
+    <div class="pagination-controls">
+      <button class="pagination-btn pagination-first" (click)="goToPage(1)" [disabled]="currentPage() === 1" title="First Page">
+        <span class="material-icons">first_page</span>
+      </button>
+      <button class="pagination-btn pagination-prev" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1" title="Previous Page">
+        <span class="material-icons">chevron_left</span>
+      </button>
+      <div class="pagination-numbers">
+        <button
+          *ngFor="let page of [].constructor(totalPages()); let i = index"
+          class="pagination-number"
+          [class.active]="(i + 1) === currentPage()"
+          (click)="goToPage(i + 1)"
+        >
+          {{ i + 1 }}
+        </button>
+      </div>
+      <button class="pagination-btn pagination-next" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()" title="Next Page">
+        <span class="material-icons">chevron_right</span>
+      </button>
+      <button class="pagination-btn pagination-last" (click)="goToPage(totalPages())" [disabled]="currentPage() === totalPages()" title="Last Page">
+        <span class="material-icons">last_page</span>
+      </button>
+    </div>
+
+    <div class="items-per-page">
+      <label>Items per page:</label>
+      <select [value]="itemsPerPage()" (change)="changeItemsPerPage($any($event.target).value)" class="items-select">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+  </div>
+</div>

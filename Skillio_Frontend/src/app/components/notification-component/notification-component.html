@@ -1,0 +1,134 @@
+<!-- ✅ TOAST NOTIFICATION — fixed position, bottom-right -->
+<div class="notif-toast" *ngIf="toastNotification" (click)="dismissToast()">
+  <div class="toast-icon">{{ getNotificationIcon(toastNotification.type) }}</div>
+  <div class="toast-content">
+    <div class="toast-title">{{ toastNotification.title }}</div>
+    <div class="toast-message">{{ toastNotification.message }}</div>
+  </div>
+  <button class="toast-close" (click)="dismissToast()">
+    <span class="material-icons">close</span>
+  </button>
+  <div class="toast-progress"></div>
+</div>
+
+<!-- Bell Button -->
+<div class="notification-wrapper" (clickOutside)="closeDropdown()">
+
+  <button class="bell-btn" (click)="toggleDropdown()" [class.active]="isDropdownOpen">
+    <span class="material-icons">notifications</span>
+    <span class="badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+  </button>
+
+  <!-- ===== LIST VIEW ===== -->
+  <div class="notification-dropdown" *ngIf="isDropdownOpen && !selectedNotification">
+
+    <div class="dropdown-header">
+      <h3 class="dropdown-title">
+        <span class="material-icons">notifications</span>
+        Notifications
+        <span class="count-chip" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+      </h3>
+      <button class="mark-all-btn" (click)="markAllAsRead()" [disabled]="unreadCount === 0">
+        <span class="material-icons">done_all</span>
+        Mark all read
+      </button>
+    </div>
+
+    <div *ngIf="isLoading" class="notif-loading">
+      <div class="notif-spinner"></div>
+      <span>Loading...</span>
+    </div>
+
+    <div *ngIf="!isLoading && notifications.length === 0" class="notif-empty">
+      <span class="material-icons notif-empty-icon">notifications_none</span>
+      <p>No notifications yet</p>
+    </div>
+
+    <div class="notif-list" *ngIf="!isLoading && notifications.length > 0">
+      <div
+        *ngFor="let notif of notifications"
+        class="notif-item"
+        [class.unread]="notif.status === 'UNREAD'"
+        [ngClass]="getPriorityClass(notif.priority)"
+        (click)="openNotificationDetail(notif, $event)">
+
+        <div class="notif-left">
+          <span class="notif-emoji">{{ getNotificationIcon(notif.type) }}</span>
+        </div>
+
+        <div class="notif-content">
+          <div class="notif-title">{{ notif.title }}</div>        <!-- ✅ fixed -->
+          <div class="notif-message">{{ notif.message }}</div>    <!-- ✅ fixed -->
+          <div class="notif-meta">
+            <span class="notif-time">{{ getTimeAgo(notif.createdAt) }}</span>  <!-- ✅ fixed -->
+            <span class="notif-type-chip">{{ notif.type }}</span>
+          </div>
+        </div>
+
+        <div class="notif-right">
+          <span class="unread-dot" *ngIf="notif.status === 'UNREAD'"></span>
+          <button
+            class="notif-delete-btn"
+            (click)="deleteNotif(notif.notificationId, $event)"
+            title="Delete">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== DETAIL VIEW ===== -->
+  <div class="notification-dropdown detail-view" *ngIf="isDropdownOpen && selectedNotification">
+
+    <div class="dropdown-header">
+      <button class="back-btn" (click)="closeNotificationDetail()">
+        <span class="material-icons">arrow_back</span>
+        Back
+      </button>
+      <h3 class="dropdown-title">Notification Detail</h3>
+    </div>
+
+    <div class="detail-body" *ngIf="selectedNotification as n">
+
+      <div class="detail-emoji">{{ getNotificationIcon(n.type) }}</div>
+      <h4 class="detail-title">{{ n.title }}</h4>        <!-- ✅ fixed -->
+      <p class="detail-message">{{ n.message }}</p>      <!-- ✅ fixed -->
+
+      <div class="detail-meta-grid">
+        <div class="detail-meta-row">
+          <span class="meta-label">Type</span>
+          <span class="meta-value type-chip">{{ n.type }}</span>
+        </div>
+        <div class="detail-meta-row">
+          <span class="meta-label">Priority</span>
+          <span class="meta-value priority-chip" [ngClass]="getPriorityClass(n.priority)">
+            {{ n.priority }}
+          </span>
+        </div>
+        <div class="detail-meta-row">
+          <span class="meta-label">Time</span>
+          <span class="meta-value">{{ getTimeAgo(n.createdAt) }}</span>   <!-- ✅ fixed -->
+        </div>
+        <div class="detail-meta-row">
+          <span class="meta-label">Status</span>
+          <span class="meta-value"
+                [class.read-status]="n.status === 'READ'"
+                [class.unread-status]="n.status === 'UNREAD'">
+            {{ n.status }}
+          </span>
+        </div>
+      </div>
+
+      <button class="btn-delete-detail" (click)="deleteNotif(n.notificationId, $event)">
+        <span class="material-icons">delete</span>
+        Delete Notification
+      </button>
+
+    </div>
+
+  </div>
+
+</div>

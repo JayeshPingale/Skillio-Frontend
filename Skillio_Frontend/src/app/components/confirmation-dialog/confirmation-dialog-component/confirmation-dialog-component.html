@@ -1,0 +1,37 @@
+<div 
+  *ngIf="confirmationService.isVisible()" 
+  class="confirmation-overlay"
+  (click)="onBackdropClick($event)"
+>
+  <div class="confirmation-dialog" [attr.data-type]="confirmationService.config().type">
+    <!-- Dialog Header -->
+    <div class="dialog-header">
+      <div class="dialog-icon">
+        <span class="material-symbols-outlined">{{ getIcon() }}</span>
+      </div>
+      <button class="btn-close" (click)="onCancel()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Dialog Content -->
+    <div class="dialog-content">
+      <h3 class="dialog-title">{{ confirmationService.config().title }}</h3>
+      <p class="dialog-message">{{ confirmationService.config().message }}</p>
+    </div>
+
+    <!-- Dialog Actions -->
+    <div class="dialog-actions">
+      <button class="btn-cancel" (click)="onCancel()">
+        {{ confirmationService.config().cancelText }}
+      </button>
+      <button 
+        class="btn-confirm" 
+        [attr.data-type]="confirmationService.config().type"
+        (click)="onConfirm()"
+      >
+        {{ confirmationService.config().confirmText }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,162 @@
+<div class="course-list-wrapper">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Course Management</h1>
+      <p class="page-subtitle">Manage all available courses and programs</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-create" (click)="navigateToCreate()">
+        <span class="material-symbols-outlined">add_circle</span>
+        Add New Course
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards with Material Icons -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-symbols-outlined">school</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Courses</span>
+        <span class="stat-value">{{ getCourseStats().total }}</span>
+      </div>
+    </div>
+    <div class="stat-card stat-active">
+      <div class="stat-icon">
+        <span class="material-symbols-outlined">check_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Active</span>
+        <span class="stat-value">{{ getCourseStats().active }}</span>
+      </div>
+    </div>
+    <div class="stat-card stat-inactive">
+      <div class="stat-icon">
+        <span class="material-symbols-outlined">pause_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Inactive</span>
+        <span class="stat-value">{{ getCourseStats().inactive }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Section -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-symbols-outlined search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by course name, description, or duration..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select 
+      [value]="selectedFilter()"
+      (change)="updateSelectedFilter($any($event.target).value)"
+      class="filter-select"
+    >
+      <option *ngFor="let option of filterOptions" [value]="option">
+        {{ option === 'ALL' ? 'All Courses' : option }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-symbols-outlined success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-symbols-outlined error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading courses...</p>
+  </div>
+
+  <!-- Courses Grid -->
+  <div *ngIf="!isLoading()" class="courses-grid">
+    <div *ngFor="let course of filteredCourses()" class="course-card">
+      <div class="card-header">
+        <div class="course-icon">
+          <span class="material-symbols-outlined">menu_book</span>
+          
+        </div>
+        <div class="course-status">
+          <span class="status-badge" [class.active]="course.isActive" [class.inactive]="!course.isActive">
+            
+            <span class="material-symbols-outlined badge-icon">
+              
+              {{ course.isActive ? 'check_circle' : 'pause_circle' }}
+            </span>
+            {{ course.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <h3 class="course-name">{{ course.courseName }}</h3>
+        <p class="course-description">{{ course.description }}</p>
+
+        <div class="course-meta">
+          <div class="meta-item">
+            <span class="material-symbols-outlined meta-icon">schedule</span>
+            <span>{{ course.duration }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="material-symbols-outlined meta-icon">payments</span>
+            <span class="course-fees">{{ formatCurrency(course.totalFees) }}</span>
+          </div>
+        </div>
+
+        <div class="course-footer">
+          <span class="material-symbols-outlined footer-icon">calendar_today</span>
+          <span class="created-date">
+           Created At :  {{ course.createdAt | date: 'dd MMM yyyy' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button 
+          class="btn-action btn-edit"
+          (click)="navigateToEdit(course.courseId)"
+          title="Edit Course"
+        >
+          <span class="material-symbols-outlined">edit</span>
+          Edit
+        </button>
+        <button 
+          class="btn-action btn-delete"
+          (click)="deleteCourse(course.courseId, course.courseName)"
+          title="Delete Course"
+        >
+          <span class="material-symbols-outlined">delete</span>
+          Delete
+        </button>
+      </div>
+    </div>
+
+    <!-- No Data State -->
+    <div *ngIf="filteredCourses().length === 0" class="no-data-container">
+      <span class="material-symbols-outlined no-data-icon">folder_open</span>
+      <p>No courses found</p>
+      <button class="btn-create-inline" (click)="navigateToCreate()">
+        <span class="material-symbols-outlined">add</span>
+        Create Your First Course
+      </button>
+    </div>
+  </div>
+</div>

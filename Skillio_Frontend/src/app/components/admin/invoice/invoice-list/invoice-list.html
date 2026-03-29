@@ -1,0 +1,258 @@
+<div class="invoice-list-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">receipt_long</span>
+        Invoices
+      </h1>
+      <p class="page-subtitle">Manage and track payment invoices</p>
+    </div>
+    <div class="header-right">
+  @if(isAdmin()) {
+  <button class="btn-generate" (click)="navigateToGenerate()">
+    <span class="material-icons btn-icon">add_circle</span>
+    Generate Invoice
+  </button>
+}
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-icons">receipt_long</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Invoices</span>
+        <span class="stat-value">{{ stats().total }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-pending-email">
+      <div class="stat-icon">
+        <span class="material-icons">email</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Pending Email</span>
+        <span class="stat-value">{{ stats().pendingEmail }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-pending-whatsapp">
+      <div class="stat-icon">
+        <span class="material-icons">chat</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Pending WhatsApp</span>
+        <span class="stat-value">{{ stats().pendingWhatsApp }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-sent">
+      <div class="stat-icon">
+        <span class="material-icons">done_all</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Fully Sent</span>
+        <span class="stat-value">{{ stats().sent }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by invoice, student..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select 
+      [value]="selectedFilter()"
+      (change)="updateFilter($any($event.target).value)"
+      class="filter-select"
+    >
+      <option value="ALL">All Invoices</option>
+      <option value="PENDING_EMAIL">Pending Email</option>
+      <option value="PENDING_WHATSAPP">Pending WhatsApp</option>
+      <option value="SENT">Fully Sent</option>
+    </select>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading invoices...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading()" class="table-container">
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th class="th-invoice"><span class="material-icons th-icon">tag</span> INVOICE</th>
+          <th class="th-student"><span class="material-icons th-icon">person</span> STUDENT</th>
+          <th class="th-payment"><span class="material-icons th-icon">payment</span> PAYMENT</th>
+          <th class="th-amount"><span class="material-icons th-icon">currency_rupee</span> AMOUNT</th>
+          <th class="th-date"><span class="material-icons th-icon">event</span> GENERATED</th>
+          <th class="th-delivery"><span class="material-icons th-icon">send</span> DELIVERY</th>
+          <th class="th-actions"><span class="material-icons th-icon">settings</span> ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let invoice of filteredInvoices()" class="table-row">
+          
+          <!-- Invoice Number -->
+          <td class="td-invoice">
+            <div class="invoice-number-cell">
+              <span class="invoice-number">{{ invoice.invoiceNumber }}</span>
+              <span class="invoice-id">ID: {{ invoice.invoiceId }}</span>
+            </div>
+          </td>
+
+          <!-- Student -->
+          <td class="td-student">
+            <div class="student-cell">
+              <span class="material-icons student-icon">account_circle</span>
+              <div class="student-info">
+                <span class="student-name">{{ invoice.studentName || 'N/A' }}</span>
+                <span class="student-code">{{ invoice.studentCode }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Payment Info -->
+          <td class="td-payment">
+            <div class="payment-info-cell">
+              <span class="payment-mode-badge">
+                <span class="material-icons mode-icon">{{ getPaymentModeIcon(invoice.paymentMode) }}</span>
+                {{ invoice.paymentMode }}
+              </span>
+              <span class="payment-detail">{{ invoice.receiptNumber }}</span>
+            </div>
+          </td>
+
+          <!-- Amount -->
+          <td class="td-amount">
+            <div class="amount-cell">
+              <span class="material-icons rupee-icon">currency_rupee</span>
+              <span class="amount-value">{{ invoice.amount | number:'1.2-2' }}</span>
+            </div>
+          </td>
+
+          <!-- Generated Date -->
+          <td class="td-date">
+            <div class="date-cell">
+              <span class="date-text">{{ invoice.generatedDate | date: 'dd MMM yyyy' }}</span>
+              <span class="time-text">{{ invoice.generatedDate | date: 'HH:mm' }}</span>
+            </div>
+          </td>
+
+          <!-- Delivery Status -->
+          <td class="td-delivery">
+            <div class="delivery-status-cell">
+              <span class="delivery-badge" [ngClass]="getDeliveryClass(invoice)">
+                <span class="material-icons delivery-icon">
+                  {{ invoice.sentToEmail && invoice.sentToWhatsApp ? 'done_all' : 'pending' }}
+                </span>
+                {{ getDeliveryText(invoice) }}
+              </span>
+              <div class="delivery-details">
+                <span class="delivery-item" [class.sent]="invoice.sentToEmail">
+                  <span class="material-icons">{{ invoice.sentToEmail ? 'check_circle' : 'cancel' }}</span>
+                  Email
+                </span>
+                <span class="delivery-item" [class.sent]="invoice.sentToWhatsApp">
+                  <span class="material-icons">{{ invoice.sentToWhatsApp ? 'check_circle' : 'cancel' }}</span>
+                  WhatsApp
+                </span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Actions -->
+          <td class="td-actions">
+            <div class="actions-cell">
+              <!-- ✅ PDF Download Button -->
+              <button 
+                class="btn-action btn-pdf"
+                (click)="downloadPDF(invoice.invoiceId, invoice.invoiceNumber)"
+                title="Download PDF"
+                *ngIf="invoice.pdfPath"
+              >
+                <span class="material-icons">picture_as_pdf</span>
+              </button>
+
+              <!-- ✅ Generate PDF Button (if not available) -->
+              <button 
+                class="btn-action btn-generate-pdf"
+                (click)="generatePDF(invoice.invoiceId, invoice.invoiceNumber)"
+                title="Generate PDF"
+                *ngIf="!invoice.pdfPath"
+              >
+                <span class="material-icons">add_circle</span>
+              </button>
+
+              <button 
+                class="btn-action btn-email"
+                (click)="markAsSentToEmail(invoice.invoiceId, invoice.invoiceNumber)"
+                title="Mark Sent to Email"
+                *ngIf="!invoice.sentToEmail"
+              >
+                <span class="material-icons">email</span>
+              </button>
+              <button 
+                class="btn-action btn-whatsapp"
+                (click)="markAsSentToWhatsApp(invoice.invoiceId, invoice.invoiceNumber)"
+                title="Mark Sent to WhatsApp"
+                *ngIf="!invoice.sentToWhatsApp"
+              >
+                <span class="material-icons">chat</span>
+              </button>
+              <button 
+                class="btn-action btn-edit"
+                (click)="navigateToEdit(invoice.invoiceId)"
+                title="Edit Invoice"
+              >
+                <span class="material-icons">edit</span>
+              </button>
+              <button 
+                class="btn-action btn-delete"
+                (click)="deleteInvoice(invoice.invoiceId, invoice.invoiceNumber)"
+                title="Delete Invoice"
+              >
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- No Data -->
+        <tr *ngIf="filteredInvoices().length === 0" class="no-data-row">
+          <td colspan="7" class="no-data-cell">
+            <span class="material-icons no-data-icon">receipt_long</span>
+            <p>No invoices found</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

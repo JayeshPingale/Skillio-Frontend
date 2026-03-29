@@ -1,0 +1,350 @@
+<div class="student-fees-list-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">account_balance_wallet</span>
+        Student Fees Management
+      </h1>
+      <p class="page-subtitle">Manage student fees and payment records</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-create" (click)="navigateToCreate()">
+        <span class="material-icons btn-icon">add_circle</span>
+        Add Fees Record
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-icons">receipt_long</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Records</span>
+        <span class="stat-value">{{ stats().total }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-pending">
+      <div class="stat-icon">
+        <span class="material-icons">pending</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Pending Payment</span>
+        <span class="stat-value">{{ stats().pending }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-partial">
+      <div class="stat-icon">
+        <span class="material-icons">payments</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Partial Payment</span>
+        <span class="stat-value">{{ stats().partial }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-completed">
+      <div class="stat-icon">
+        <span class="material-icons">check_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Completed</span>
+        <span class="stat-value">{{ stats().completed }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-overdue">
+      <div class="stat-icon">
+        <span class="material-icons">event_busy</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Overdue</span>
+        <span class="stat-value">{{ stats().overdue }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-amount">
+      <div class="stat-icon">
+        <span class="material-icons">currency_rupee</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Balance</span>
+        <span class="stat-value">₹{{ stats().totalBalanceAmount | number:'1.2-2' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by student, course, or batch..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select 
+      [value]="selectedPaymentStatus()"
+      (change)="updatePaymentStatus($any($event.target).value)"
+      class="status-filter"
+    >
+      <option *ngFor="let status of paymentStatuses" [value]="status">
+        {{ status === 'ALL' ? 'All Payment Status' : status }}
+      </option>
+    </select>
+
+    <button 
+      class="btn-overdue-filter"
+      [class.active]="showOverdueOnly()"
+      (click)="toggleOverdueFilter()"
+    >
+      <span class="material-icons">event_busy</span>
+      Overdue Only
+    </button>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading student fees...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading()" class="table-container">
+    <table class="fees-table">
+      <thead>
+        <tr>
+          <th class="th-id">
+            <span class="material-icons th-icon">tag</span>
+            ID
+          </th>
+          <th class="th-student">
+            <span class="material-icons th-icon">person</span>
+            STUDENT
+          </th>
+          <th class="th-course">
+            <span class="material-icons th-icon">book</span>
+            COURSE
+          </th>
+          <th class="th-batch">
+            <span class="material-icons th-icon">groups</span>
+            BATCH
+          </th>
+          <th class="th-total">
+            <span class="material-icons th-icon">receipt</span>
+            TOTAL FEES
+          </th>
+          <th class="th-paid">
+            <span class="material-icons th-icon">payments</span>
+            AMOUNT PAID
+          </th>
+          <th class="th-balance">
+            <span class="material-icons th-icon">account_balance</span>
+            BALANCE
+          </th>
+          <th class="th-progress">
+            <span class="material-icons th-icon">trending_up</span>
+            PROGRESS
+          </th>
+          <th class="th-due">
+            <span class="material-icons th-icon">event</span>
+            DUE DATE
+          </th>
+          <th class="th-status">
+            <span class="material-icons th-icon">flag</span>
+            STATUS
+          </th>
+          <th class="th-actions">
+            <span class="material-icons th-icon">settings</span>
+            ACTIONS
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let fees of paginatedFees()" class="table-row" [class.overdue-row]="isOverdue(fees.dueDate, fees.paymentStatus)">
+          
+          <!-- ID -->
+          <td class="td-id">
+            <span class="fees-id-badge">#{{ fees.feesId }}</span>
+          </td>
+
+          <!-- Student -->
+          <td class="td-student">
+            <div class="student-cell">
+              <span class="material-icons student-icon">account_circle</span>
+              <span class="student-name">{{ fees.studentName }}</span>
+            </div>
+          </td>
+
+          <!-- Course -->
+          <td class="td-course">
+            <div class="course-cell">
+              <span class="material-icons course-icon">book</span>
+              <span class="course-name">{{ fees.courseName }}</span>
+            </div>
+          </td>
+
+          <!-- Batch -->
+          <td class="td-batch">
+            <span class="batch-badge">
+              <span class="material-icons batch-icon">groups</span>
+              {{ fees.batchName }}
+            </span>
+          </td>
+
+          <!-- Total Fees -->
+          <td class="td-total">
+            <span class="amount-text total-amount">
+              <span class="material-icons amount-icon">currency_rupee</span>
+              {{ fees.totalFees | number:'1.2-2' }}
+            </span>
+          </td>
+
+          <!-- Amount Paid -->
+          <td class="td-paid">
+            <span class="amount-text paid-amount">
+              <span class="material-icons amount-icon">currency_rupee</span>
+              {{ fees.paidAmount | number:'1.2-2' }}
+            </span>
+          </td>
+
+          <!-- Balance -->
+          <td class="td-balance">
+            <span class="amount-text balance-amount" [class.zero-balance]="fees.balanceAmount === 0">
+              <span class="material-icons amount-icon">currency_rupee</span>
+              {{ fees.balanceAmount | number:'1.2-2' }}
+            </span>
+          </td>
+
+          <!-- Progress Bar -->
+          <td class="td-progress">
+            <div class="progress-wrapper">
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  [style.width.%]="calculatePercentagePaid(fees.paidAmount, fees.totalFees)"
+                  [ngClass]="{
+                    'progress-zero': calculatePercentagePaid(fees.paidAmount, fees.totalFees) === 0,
+                    'progress-partial': calculatePercentagePaid(fees.paidAmount, fees.totalFees) > 0 && calculatePercentagePaid(fees.paidAmount, fees.totalFees) < 100,
+                    'progress-full': calculatePercentagePaid(fees.paidAmount, fees.totalFees) === 100
+                  }"
+                ></div>
+              </div>
+              <span class="progress-text">{{ calculatePercentagePaid(fees.paidAmount, fees.totalFees) }}%</span>
+            </div>
+          </td>
+
+          <!-- Due Date -->
+          <td class="td-due">
+            <div class="due-cell" [class.overdue-date]="isOverdue(fees.dueDate, fees.paymentStatus)">
+              <span class="material-icons due-icon">
+                {{ isOverdue(fees.dueDate, fees.paymentStatus) ? 'event_busy' : 'event' }}
+              </span>
+              <span>{{ fees.dueDate | date: 'dd MMM yyyy' }}</span>
+            </div>
+          </td>
+
+          <!-- Payment Status -->
+          <td class="td-status">
+            <span class="payment-badge" [ngClass]="getPaymentStatusClass(fees.paymentStatus)">
+              <span class="material-icons payment-icon">{{ getPaymentStatusIcon(fees.paymentStatus) }}</span>
+              {{ fees.paymentStatus }}
+            </span>
+          </td>
+
+          <!-- ✅ FIXED Actions Column -->
+          <td class="td-actions">
+            <div class="actions-cell">
+              <button class="btn-icon btn-pay" 
+                      (click)="navigateToPayFees(fees.feesId, fees.studentName, fees.balanceAmount)" 
+                      title="Pay Fees"
+                      [disabled]="fees.paymentStatus === 'COMPLETED'">
+                <span class="material-icons">payment</span>
+                <span class="btn-text">Pay</span>
+              </button>
+              <button class="btn-icon btn-delete" 
+                      (click)="deleteStudentFees(fees.feesId, fees.studentName)" 
+                      title="Delete">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </td>
+
+        </tr>
+
+        <!-- No Data -->
+        <tr *ngIf="paginatedFees().length === 0" class="no-data-row">
+          <td colspan="11" class="no-data-cell">
+            <span class="material-icons no-data-icon">receipt_long_off</span>
+            <p>No fees records found matching your criteria</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!isLoading() && totalPages() > 1" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ ((currentPage() - 1) * itemsPerPage()) + 1 }} to {{ Math.min(currentPage() * itemsPerPage(), totalItems()) }} of {{ totalItems() }} fees records
+    </div>
+
+    <div class="pagination-controls">
+      <button class="pagination-btn pagination-first" (click)="goToPage(1)" [disabled]="currentPage() === 1" title="First Page">
+        <span class="material-icons">first_page</span>
+      </button>
+
+      <button class="pagination-btn pagination-prev" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1" title="Previous Page">
+        <span class="material-icons">chevron_left</span>
+      </button>
+
+      <div class="pagination-numbers">
+        <button
+          *ngFor="let page of [].constructor(totalPages()); let i = index"
+          class="pagination-number"
+          [class.active]="(i + 1) === currentPage()"
+          (click)="goToPage(i + 1)"
+        >
+          {{ i + 1 }}
+        </button>
+      </div>
+
+      <button class="pagination-btn pagination-next" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()" title="Next Page">
+        <span class="material-icons">chevron_right</span>
+      </button>
+
+      <button class="pagination-btn pagination-last" (click)="goToPage(totalPages())" [disabled]="currentPage() === totalPages()" title="Last Page">
+        <span class="material-icons">last_page</span>
+      </button>
+    </div>
+
+    <div class="items-per-page">
+      <label>Items per page:</label>
+      <select [value]="itemsPerPage()" (change)="changeItemsPerPage($any($event.target).value)" class="items-select">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+  </div>
+</div>

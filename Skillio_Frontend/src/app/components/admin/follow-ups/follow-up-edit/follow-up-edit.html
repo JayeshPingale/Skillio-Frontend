@@ -1,0 +1,220 @@
+<div class="follow-up-edit-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">edit_note</span>
+        Edit Follow-Up
+      </h1>
+      <p class="page-subtitle">Update follow-up details</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-icons btn-icon">arrow_back</span>
+        Back to List
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading follow-up details...</p>
+  </div>
+
+  <!-- Form Card -->
+  <div *ngIf="!isLoading() && currentFollowUp()" class="form-card">
+    
+    <!-- Lead Info Card -->
+    <div class="info-card">
+      <div class="info-header">
+        <span class="material-icons info-icon">person</span>
+        <span class="info-title">Lead Information</span>
+      </div>
+      <div class="info-content">
+        <div class="info-item">
+          <span class="info-label">Lead Name:</span>
+          <span class="info-value">{{ currentFollowUp()?.leadName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Created By:</span>
+          <span class="info-value">{{ currentFollowUp()?.createdByUserName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Created At:</span>
+          <span class="info-value">{{ currentFollowUp()?.createdAt | date: 'dd MMM yyyy, hh:mm a' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Form -->
+    <form [formGroup]="followUpForm" (ngSubmit)="onSubmit()">
+      
+      <!-- Follow-Up Date -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">event</span>
+          Follow-Up Date
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">calendar_today</span>
+          <input
+            type="date"
+            formControlName="followUpDate"
+            class="form-input"
+            [class.input-error]="followUpForm.get('followUpDate')?.invalid && followUpForm.get('followUpDate')?.touched"
+          />
+        </div>
+        <span 
+          class="error-message" 
+          *ngIf="followUpForm.get('followUpDate')?.invalid && followUpForm.get('followUpDate')?.touched"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Follow-up date is required
+        </span>
+      </div>
+
+      <!-- Follow-Up Type -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">category</span>
+          Follow-Up Type
+          <span class="required">*</span>
+        </label>
+        <div class="type-selector">
+          <label 
+            *ngFor="let type of followUpTypes" 
+            class="type-option"
+            [class.type-selected]="followUpForm.get('followUpType')?.value === type"
+          >
+            <input 
+              type="radio" 
+              formControlName="followUpType" 
+              [value]="type"
+              class="type-radio"
+            />
+            <div class="type-content">
+              <span class="material-icons type-icon">{{ getTypeIcon(type) }}</span>
+              <span class="type-label">{{ type }}</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">notes</span>
+          Notes
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon textarea-icon">description</span>
+          <textarea
+            formControlName="notes"
+            class="form-textarea"
+            placeholder="Enter follow-up notes (min 5 characters)"
+            rows="4"
+            [class.input-error]="followUpForm.get('notes')?.invalid && followUpForm.get('notes')?.touched"
+          ></textarea>
+        </div>
+        <div class="char-count">
+          {{ followUpForm.get('notes')?.value?.length || 0 }} / 500 characters
+        </div>
+        <span 
+          class="error-message" 
+          *ngIf="followUpForm.get('notes')?.invalid && followUpForm.get('notes')?.touched"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Notes must be between 5 and 500 characters
+        </span>
+      </div>
+
+      <!-- Next Follow-Up Date -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">next_plan</span>
+          Next Follow-Up Date
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">event_available</span>
+          <input
+            type="date"
+            formControlName="nextFollowUpDate"
+            class="form-input"
+            [class.input-error]="followUpForm.get('nextFollowUpDate')?.invalid && followUpForm.get('nextFollowUpDate')?.touched"
+          />
+        </div>
+        <span 
+          class="error-message" 
+          *ngIf="followUpForm.get('nextFollowUpDate')?.invalid && followUpForm.get('nextFollowUpDate')?.touched"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Next follow-up date is required
+        </span>
+      </div>
+
+      <!-- Status -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">flag</span>
+          Status
+          <span class="required">*</span>
+        </label>
+        <div class="status-selector">
+          <label 
+            *ngFor="let status of followUpStatuses" 
+            class="status-option"
+            [class.status-selected]="followUpForm.get('status')?.value === status"
+          >
+            <input 
+              type="radio" 
+              formControlName="status" 
+              [value]="status"
+              class="status-radio"
+            />
+            <div class="status-content" [ngClass]="getStatusClass(status)">
+              <span class="material-icons status-icon">{{ getStatusIcon(status) }}</span>
+              <span class="status-label">{{ status }}</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn-cancel" 
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-icons btn-icon">close</span>
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn-submit"
+          [disabled]="isSubmitting() || followUpForm.invalid"
+        >
+          <span class="material-icons btn-icon" *ngIf="!isSubmitting()">save</span>
+          <span class="spinner-small" *ngIf="isSubmitting()"></span>
+          {{ isSubmitting() ? 'Updating...' : 'Update Follow-Up' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

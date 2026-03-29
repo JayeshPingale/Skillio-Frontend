@@ -1,0 +1,220 @@
+<div class="lead-assign-wrapper" [attr.data-theme]="themeService.currentTheme()">
+  <!-- ==================== PAGE HEADER ==================== -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-icons">arrow_back</span>
+        Back to Leads
+      </button>
+      <div class="header-info">
+        <h1 class="page-title">
+          <span class="material-icons title-icon">person_add_alt</span>
+          Assign Lead
+        </h1>
+        <p class="page-subtitle">
+          Assign {{ currentLead()?.fullName }} to a sales executive
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SUCCESS ALERT ==================== -->
+  <div class="success-alert" *ngIf="successMessage()">
+    <span class="material-icons alert-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <!-- ==================== ERROR ALERT ==================== -->
+  <div class="error-alert" *ngIf="errorMessage()">
+    <span class="material-icons alert-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- ==================== LOADING STATE ==================== -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading...</p>
+  </div>
+
+  <!-- ==================== CONTENT ==================== -->
+  <div class="content-grid" *ngIf="!isLoading()">
+    <!-- LEFT: LEAD INFO CARD -->
+    <div class="lead-info-card">
+      <div class="card-header">
+        <span class="material-icons header-icon">person</span>
+        <h3>Lead Information</h3>
+      </div>
+
+      <div class="lead-info">
+        <div class="info-avatar">
+          <span class="material-icons avatar-icon">person</span>
+        </div>
+        <div class="info-details">
+          <h4>{{ currentLead()?.fullName }}</h4>
+          <div class="info-meta">
+            <div class="meta-item">
+              <span class="material-icons meta-icon">phone</span>
+              <span>{{ currentLead()?.contactNumber }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="material-icons meta-icon">email</span>
+              <span>{{ currentLead()?.email || 'No email' }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="material-icons meta-icon">school</span>
+              <span>{{ currentLead()?.courseInterested }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ CURRENT ASSIGNMENT STATUS -->
+      <div class="current-assignment" *ngIf="isLeadAssigned()">
+        <div class="assignment-badge">
+          <span class="material-icons">person_pin</span>
+          <div class="assignment-info">
+            <span class="label">Currently Assigned To:</span>
+            <span class="name">{{ currentLead()?.assignedToUserName }}</span>
+          </div>
+        </div>
+        
+        <!-- ✅ UNASSIGN BUTTON -->
+        <button 
+          type="button" 
+          class="btn-unassign"
+          (click)="unassignLead()"
+          [disabled]="isUnassigning() || isSubmitting()">
+          <span class="material-icons" *ngIf="!isUnassigning()">person_remove</span>
+          <span class="spinner" *ngIf="isUnassigning()"></span>
+          {{ isUnassigning() ? 'Unassigning...' : 'Unassign' }}
+        </button>
+      </div>
+
+      <!-- ✅ WARNING MESSAGE -->
+      <div class="warning-message" *ngIf="isLeadAssigned() && selectedUserId() && !isReassigningSameUser()">
+        <span class="material-icons">warning</span>
+        <p>This lead is already assigned. Please unassign first before assigning to a different user.</p>
+      </div>
+
+      <div class="lead-stats">
+        <div class="stat-item">
+          <span class="stat-label">
+            <span class="material-icons stat-label-icon">flag</span>
+            Status
+          </span>
+          <span class="stat-value">
+            <span class="status-badge" [ngClass]="getStatusClass(currentLead()?.status || 'NEW')">
+              <span class="material-icons status-icon">{{ getStatusIcon(currentLead()?.status || 'NEW') }}</span>
+              {{ currentLead()?.status }}
+            </span>
+          </span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">
+            <span class="material-icons stat-label-icon">star</span>
+            Interest Level
+          </span>
+          <span class="stat-value">{{ currentLead()?.interestLevel }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">
+            <span class="material-icons stat-label-icon">source</span>
+            Lead Source
+          </span>
+          <span class="stat-value">{{ currentLead()?.sourceName }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: USERS SELECTION CARD -->
+    <div class="users-card">
+      <div class="card-header">
+        <span class="material-icons header-icon">groups</span>
+        <h3>Select Sales Executive</h3>
+      </div>
+
+      <!-- SEARCH BOX -->
+      <div class="search-box">
+        <span class="material-icons search-icon">search</span>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search by name, email or role..."
+          [value]="searchTerm()"
+          (input)="updateSearchTerm($any($event.target).value)"
+        />
+      </div>
+
+      <!-- USERS LIST -->
+      <div class="users-list">
+        <div
+          class="user-item"
+          *ngFor="let user of getFilteredUsers()"
+          [class.selected]="selectedUserId() === user.userId"
+          (click)="selectUser(user.userId)"
+        >
+          <div class="user-avatar">{{ getUserInitials(user.fullName) }}</div>
+          <div class="user-info">
+            <h4>{{ user.fullName }}</h4>
+            <p>
+              <span class="material-icons inline-icon">email</span>
+              {{ user.email }}
+            </p>
+            <span class="user-role" [ngClass]="getRoleBadgeClass(user.roleName)">
+              <span class="material-icons role-icon">badge</span>
+              {{ formatRoleName(user.roleName) }}
+            </span>
+          </div>
+          <div class="selection-indicator" *ngIf="selectedUserId() === user.userId">
+            <span class="material-icons">check_circle</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- NO USERS FOUND -->
+      <div class="no-users" *ngIf="getFilteredUsers().length === 0">
+        <span class="material-icons no-users-icon">person_off</span>
+        <p>No users found</p>
+      </div>
+
+      <!-- REMARKS INPUT (Optional) -->
+      <div class="remarks-section">
+        <label for="remarks" class="remarks-label">
+          <span class="material-icons">comment</span>
+          Remarks (Optional)
+        </label>
+        <textarea
+          id="remarks"
+          class="remarks-input"
+          placeholder="Add any remarks or notes..."
+          rows="3"
+          [value]="remarks()"
+          (input)="updateRemarks($any($event.target).value)"
+        ></textarea>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="assign-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancel()"
+          [disabled]="isSubmitting() || isUnassigning()"
+        >
+          <span class="material-icons">close</span>
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn-assign"
+          (click)="assignLead()"
+          [disabled]="!selectedUserId() || isSubmitting() || isUnassigning() || (isLeadAssigned() && !isReassigningSameUser())"
+        >
+          <span class="material-icons" *ngIf="!isSubmitting()">person_add</span>
+          <span class="spinner" *ngIf="isSubmitting()"></span>
+          {{ isSubmitting() ? 'Assigning...' : 'Assign Lead' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

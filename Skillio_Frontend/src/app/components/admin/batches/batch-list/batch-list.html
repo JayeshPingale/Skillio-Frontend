@@ -1,0 +1,196 @@
+<div class="batch-list-wrapper">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Batch Management</h1>
+      <p class="page-subtitle">Manage course batches and schedules</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-create" (click)="navigateToCreate()">
+        <span class="material-symbols-outlined">add_circle</span>
+        Create New Batch
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-symbols-outlined">groups</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Batches</span>
+        <span class="stat-value">{{ getBatchStats().total }}</span>
+      </div>
+    </div>
+    <div class="stat-card stat-upcoming">
+      <div class="stat-icon">
+        <span class="material-symbols-outlined">schedule</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Upcoming</span>
+        <span class="stat-value">{{ getBatchStats().upcoming }}</span>
+      </div>
+    </div>
+    <div class="stat-card stat-ongoing">
+      <div class="stat-icon">
+        <span class="material-symbols-outlined">play_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Ongoing</span>
+        <span class="stat-value">{{ getBatchStats().ongoing }}</span>
+      </div>
+    </div>
+    <div class="stat-card stat-completed">
+      <div class="stat-icon">
+        <span class="material-symbols-outlined">check_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Completed</span>
+        <span class="stat-value">{{ getBatchStats().completed }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Section -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-symbols-outlined search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by batch name, course, or instructor..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select
+      [value]="selectedFilter()"
+      (change)="updateSelectedFilter($any($event.target).value)"
+      class="filter-select"
+    >
+      <option *ngFor="let option of filterOptions" [value]="option">
+        {{ option === 'ALL' ? 'All Batches' : option }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-symbols-outlined success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-symbols-outlined error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading batches...</p>
+  </div>
+
+  <!-- Batches Grid -->
+  <div *ngIf="!isLoading()" class="batches-grid">
+    <div *ngFor="let batch of filteredBatches()" class="batch-card">
+      <div class="card-header">
+        <div class="batch-icon">
+          <span class="material-symbols-outlined">school</span>
+        </div>
+        <div class="batch-badges">
+          <span class="status-badge" [ngClass]="getStatusClass(batch.status)">
+            <span class="material-symbols-outlined badge-icon">
+              {{ getStatusIcon(batch.status) }}
+            </span>
+            {{ batch.status }}
+          </span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <h3 class="batch-name">{{ batch.batchName }}</h3>
+        <p class="batch-code">{{ batch.batchCode }}</p>
+        <p class="course-name">{{ batch.courseName }}</p>
+
+        <div class="batch-info">
+          <div class="info-item">
+            <span class="material-symbols-outlined info-icon">person</span>
+            <span>{{ batch.instructor }}</span>
+          </div>
+          <div class="info-item">
+            <span class="material-symbols-outlined info-icon">calendar_today</span>
+            <span
+              >{{ batch.startDate | date : 'dd MMM' }} -
+              {{ batch.endDate | date : 'dd MMM yyyy' }}</span
+            >
+          </div>
+          <div class="info-item">
+            <span class="material-symbols-outlined info-icon">schedule</span>
+            <span>{{ batch.timing }}</span>
+          </div>
+          <div class="info-item">
+            <span class="material-symbols-outlined info-icon">
+              {{
+                batch.modeOfClass === 'ONLINE'
+                  ? 'wifi'
+                  : batch.modeOfClass === 'OFFLINE'
+                  ? 'location_on'
+                  : 'sync_alt'
+              }}
+            </span>
+            <span>{{ batch.modeOfClass }}</span>
+          </div>
+        </div>
+
+        <!-- Enrollment Count -->
+<!-- Inside card-body, before card-actions -->
+<div class="enrollment-section">
+  <div class="enrollment-left">
+    <div class="enrollment-icon">
+      <span class="material-symbols-outlined">groups</span>
+    </div>
+    <div class="enrollment-info">
+      <span class="enrollment-label">Enrolled Students</span>
+      <div class="enrollment-count">
+        {{ batch.enrolledCount || 0 }}
+      </div>
+    </div>
+  </div>
+</div>
+    
+      <div class="card-actions">
+        <button
+          class="btn-action btn-edit"
+          (click)="navigateToEdit(batch.batchId)"
+          title="Edit Batch"
+        >
+          <span class="material-symbols-outlined">edit</span>
+          Edit
+        </button>
+        <button
+          class="btn-action btn-delete"
+          (click)="deleteBatch(batch.batchId, batch.batchName, batch.batchCode)"
+          title="Delete Batch"
+        >
+          <span class="material-symbols-outlined">delete</span>
+          Delete
+        </button>
+      </div>
+    </div>
+
+    <!-- No Data State -->
+    <div *ngIf="filteredBatches().length === 0" class="no-data-container">
+      <span class="material-symbols-outlined no-data-icon">folder_open</span>
+      <p>No batches found</p>
+      <button class="btn-create-inline" (click)="navigateToCreate()">
+        <span class="material-symbols-outlined">add</span>
+        Create Your First Batch
+      </button>
+    </div>
+  </div>
+</div>

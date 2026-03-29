@@ -1,0 +1,294 @@
+<div class="payment-list-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">payments</span>
+        Payment Management
+      </h1>
+      <p class="page-subtitle">Track and manage all payment transactions</p>
+    </div>
+    <div class="header-right">
+      <!-- <button class="btn-create" (click)="navigateToCreate()">
+        <span class="material-icons btn-icon">add_circle</span>
+        Record Payment
+      </button> -->
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-icons">receipt_long</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Payments</span>
+        <span class="stat-value">{{ stats().total }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-amount">
+      <div class="stat-icon">
+        <span class="material-icons">currency_rupee</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Amount</span>
+        <span class="stat-value">₹{{ stats().totalAmount | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-today">
+      <div class="stat-icon">
+        <span class="material-icons">today</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Today's Payments</span>
+        <span class="stat-value">{{ stats().todayPayments }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-today-amount">
+      <div class="stat-icon">
+        <span class="material-icons">account_balance_wallet</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Today's Amount</span>
+        <span class="stat-value">₹{{ stats().todayAmount | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-cash">
+      <div class="stat-icon">
+        <span class="material-icons">payments</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Cash</span>
+        <span class="stat-value">{{ stats().cash }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-upi">
+      <div class="stat-icon">
+        <span class="material-icons">qr_code_scanner</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">UPI</span>
+        <span class="stat-value">{{ stats().upi }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by student, receipt, or transaction ID..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select 
+      [value]="selectedPaymentMode()"
+      (change)="updatePaymentMode($any($event.target).value)"
+      class="mode-filter"
+    >
+      <option *ngFor="let mode of paymentModes" [value]="mode">
+        {{ mode === 'ALL' ? 'All Payment Modes' : mode }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading payments...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading()" class="table-container">
+    <table class="payments-table">
+      <thead>
+        <tr>
+          <th class="th-id">
+            <span class="material-icons th-icon">tag</span>
+            ID
+          </th>
+          <th class="th-student">
+            <span class="material-icons th-icon">person</span>
+            STUDENT
+          </th>
+          <th class="th-receipt">
+            <span class="material-icons th-icon">receipt</span>
+            RECEIPT
+          </th>
+          <th class="th-amount">
+            <span class="material-icons th-icon">currency_rupee</span>
+            AMOUNT
+          </th>
+          <th class="th-date">
+            <span class="material-icons th-icon">event</span>
+            DATE
+          </th>
+          <th class="th-mode">
+            <span class="material-icons th-icon">payment</span>
+            MODE
+          </th>
+          <th class="th-transaction">
+            <span class="material-icons th-icon">confirmation_number</span>
+            TRANSACTION
+          </th>
+          <th class="th-remarks">
+            <span class="material-icons th-icon">comment</span>
+            REMARKS
+          </th>
+          <th class="th-actions">
+            <span class="material-icons th-icon">settings</span>
+            ACTIONS
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let payment of paginatedPayments()" class="table-row">
+          
+          <!-- ID -->
+          <td class="td-id">
+            <span class="payment-id-badge">#{{ payment.paymentId }}</span>
+          </td>
+
+          <!-- Student -->
+          <td class="td-student">
+            <div class="student-cell">
+              <span class="material-icons student-icon">account_circle</span>
+              <div class="student-info">
+                <span class="student-name">{{ payment.studentName }}</span>
+                <span class="student-email">{{ payment.studentEmail }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Receipt Number -->
+          <td class="td-receipt">
+            <span class="receipt-number">{{ payment.receiptNumber }}</span>
+          </td>
+
+          <!-- Amount -->
+          <td class="td-amount">
+            <span class="amount-text">
+              <span class="material-icons amount-icon">currency_rupee</span>
+              {{ payment.amount | number:'1.2-2' }}
+            </span>
+          </td>
+
+          <!-- Payment Date -->
+          <td class="td-date">
+            <div class="date-cell">
+              <span class="material-icons date-icon">event</span>
+              <span>{{ payment.paymentDate | date: 'dd MMM yyyy' }}</span>
+            </div>
+          </td>
+
+          <!-- Payment Mode -->
+          <td class="td-mode">
+            <span class="mode-badge" [ngClass]="getPaymentModeClass(payment.paymentMode)">
+              <span class="material-icons mode-icon">{{ getPaymentModeIcon(payment.paymentMode) }}</span>
+              {{ payment.paymentMode }}
+            </span>
+          </td>
+
+          <!-- Transaction ID -->
+          <td class="td-transaction">
+            <span class="transaction-text" [title]="payment.transactionId">
+              {{ payment.transactionId || 'N/A' }}
+            </span>
+          </td>
+
+          <!-- Remarks -->
+          <td class="td-remarks">
+            <span class="remarks-text" [title]="payment.remarks">
+              {{ payment.remarks || '-' }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td class="td-actions">
+            <div class="actions-cell">
+              <button 
+                *appHasPermission="'PAYMENT_DELETE'"
+                class="btn-action btn-delete"
+                (click)="deletePayment(payment.paymentId, payment.studentName)"
+                title="Delete Payment"
+              >
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- No Data -->
+        <tr *ngIf="paginatedPayments().length === 0" class="no-data-row">
+          <td colspan="9" class="no-data-cell">
+            <span class="material-icons no-data-icon">payment_off</span>
+            <p>No payments found matching your criteria</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!isLoading() && totalPages() > 1" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ ((currentPage() - 1) * itemsPerPage()) + 1 }} to {{ Math.min(currentPage() * itemsPerPage(), totalItems()) }} of {{ totalItems() }} payments
+    </div>
+
+    <div class="pagination-controls">
+      <button class="pagination-btn pagination-first" (click)="goToPage(1)" [disabled]="currentPage() === 1" title="First Page">
+        <span class="material-icons">first_page</span>
+      </button>
+      <button class="pagination-btn pagination-prev" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1" title="Previous Page">
+        <span class="material-icons">chevron_left</span>
+      </button>
+      <div class="pagination-numbers">
+        <button
+          *ngFor="let page of [].constructor(totalPages()); let i = index"
+          class="pagination-number"
+          [class.active]="(i + 1) === currentPage()"
+          (click)="goToPage(i + 1)"
+        >
+          {{ i + 1 }}
+        </button>
+      </div>
+      <button class="pagination-btn pagination-next" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()" title="Next Page">
+        <span class="material-icons">chevron_right</span>
+      </button>
+      <button class="pagination-btn pagination-last" (click)="goToPage(totalPages())" [disabled]="currentPage() === totalPages()" title="Last Page">
+        <span class="material-icons">last_page</span>
+      </button>
+    </div>
+
+    <div class="items-per-page">
+      <label>Items per page:</label>
+      <select [value]="itemsPerPage()" (change)="changeItemsPerPage($any($event.target).value)" class="items-select">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+  </div>
+</div>

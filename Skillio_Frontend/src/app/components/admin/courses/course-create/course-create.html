@@ -1,0 +1,181 @@
+<div class="course-create-wrapper">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Back
+      </button>
+      <div class="header-info">
+        <h1 class="page-title">Create New Course</h1>
+        <p class="page-subtitle">Add a new course to your catalog</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-symbols-outlined error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <div class="content-grid">
+    <!-- Form Card -->
+    <div class="form-card">
+      <form [formGroup]="courseForm" (ngSubmit)="onSubmit()">
+        <div class="form-header">
+          <span class="material-symbols-outlined header-icon">school</span>
+          <h2>Course Information</h2>
+        </div>
+
+        <!-- Course Name -->
+        <div class="form-group">
+          <label for="courseName" class="input-label">
+            <span class="material-symbols-outlined label-icon">label</span>
+            Course Name *
+          </label>
+          <input
+            type="text"
+            id="courseName"
+            formControlName="courseName"
+            class="input-field"
+            placeholder="e.g., Java Full Stack Development"
+            [class.error]="courseName?.invalid && courseName?.touched"
+          />
+          <div class="error-message" *ngIf="courseName?.invalid && courseName?.touched">
+            <span *ngIf="courseName?.errors?.['required']">Course name is required</span>
+            <span *ngIf="courseName?.errors?.['minlength']">Minimum 3 characters required</span>
+          </div>
+        </div>
+
+        <!-- Course Description -->
+        <div class="form-group">
+          <label for="courseDescription" class="input-label">
+            <span class="material-symbols-outlined label-icon">description</span>
+            Course Description *
+          </label>
+          <textarea
+            id="courseDescription"
+            formControlName="courseDescription"
+            class="input-field textarea-field"
+            placeholder="Describe the course content, objectives, and outcomes..."
+            rows="4"
+            [class.error]="courseDescription?.invalid && courseDescription?.touched"
+          ></textarea>
+          <div class="char-count">
+            {{ courseDescription?.value?.length || 0 }} characters
+          </div>
+          <div class="error-message" *ngIf="courseDescription?.invalid && courseDescription?.touched">
+            <span *ngIf="courseDescription?.errors?.['required']">Description is required</span>
+            <span *ngIf="courseDescription?.errors?.['minlength']">Minimum 10 characters required</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <!-- Duration -->
+          <div class="form-group">
+            <label for="duration" class="input-label">
+              <span class="material-symbols-outlined label-icon">schedule</span>
+              Duration *
+            </label>
+            <input
+              type="text"
+              id="duration"
+              formControlName="duration"
+              class="input-field"
+              placeholder="e.g., 6 Months, 12 Weeks"
+              [class.error]="duration?.invalid && duration?.touched"
+            />
+            <div class="error-message" *ngIf="duration?.invalid && duration?.touched">
+              <span *ngIf="duration?.errors?.['required']">Duration is required</span>
+            </div>
+          </div>
+
+          <!-- totalFees -->
+          <div class="form-group">
+            <label for="totalFees" class="input-label">
+              <span class="material-symbols-outlined label-icon">payments</span>
+              Course fees (₹) *
+            </label>
+            <input
+              type="number"
+              id="totalFees"
+              formControlName="totalFees"
+              class="input-field"
+              placeholder="Enter course totalFees"
+              min="0"
+              [class.error]="totalFees?.invalid && totalFees?.touched"
+            />
+            <div class="error-message" *ngIf="totalFees?.invalid && totalFees?.touched">
+              <span *ngIf="totalFees?.errors?.['required']">totalFees is required</span>
+              <span *ngIf="totalFees?.errors?.['min']">totalFees must be 0 or greater</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="cancel()"
+            [disabled]="isSubmitting()"
+          >
+            <span class="material-symbols-outlined">close</span>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="isSubmitting() || courseForm.invalid"
+          >
+            <span *ngIf="!isSubmitting()">
+              <span class="material-symbols-outlined">check_circle</span>
+              Create Course
+            </span>
+            <span *ngIf="isSubmitting()" class="loading-text">
+              <span class="spinner"></span>
+              Creating...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Suggestions Panel -->
+    <div class="suggestions-panel">
+      <div class="panel-header">
+        <span class="material-symbols-outlined header-icon">lightbulb</span>
+        <h3>Quick Templates</h3>
+      </div>
+      <p class="panel-description">Click to use a popular course template</p>
+
+      <div class="suggestions-list">
+        <div 
+          *ngFor="let suggestion of courseSuggestions"
+          class="suggestion-card"
+          (click)="useSuggestion(suggestion)"
+        >
+          <div class="suggestion-header">
+            <span class="material-symbols-outlined suggestion-icon">{{ suggestion.icon }}</span>
+            <h4>{{ suggestion.name }}</h4>
+          </div>
+          <div class="suggestion-meta">
+            <span class="meta-badge">
+              <span class="material-symbols-outlined meta-icon">schedule</span>
+              {{ suggestion.duration }}
+            </span>
+            <span class="meta-badge">
+              <span class="material-symbols-outlined meta-icon">payments</span>
+              ₹{{ suggestion.totalFees.toLocaleString('en-IN') }}
+            </span>
+          </div>
+          <div class="suggestion-action">
+            <span class="material-symbols-outlined">arrow_forward</span>
+            <span>Use Template</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

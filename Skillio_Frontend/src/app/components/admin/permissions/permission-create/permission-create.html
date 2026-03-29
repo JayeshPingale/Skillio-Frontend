@@ -1,0 +1,197 @@
+<div class="permission-create-wrapper">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="cancel()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Back
+      </button>
+      <div class="header-info">
+        <h1 class="page-title">Create Permission</h1>
+        <p class="page-subtitle">Add a new permission to the system</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage()" class="error-alert">
+    <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+    </svg>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <div class="content-grid">
+    <!-- Form Card -->
+    <div class="form-card">
+      <form [formGroup]="permissionForm" (ngSubmit)="onSubmit()">
+        <div class="form-header">
+          <svg class="header-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          <h2>Permission Details</h2>
+        </div>
+
+        <!-- Permission Name -->
+        <div class="form-group">
+          <label for="permissionName" class="input-label">
+            <svg class="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+            Permission Name *
+          </label>
+          <input
+            type="text"
+            id="permissionName"
+            formControlName="permissionName"
+            class="input-field"
+            placeholder="e.g., USER_CREATE, LEAD_READ"
+            (input)="formatPermissionName($event)"
+            [class.error]="permissionName?.invalid && permissionName?.touched"
+          />
+          <div class="input-hint">Use UPPERCASE with underscores (e.g., MODULE_ACTION)</div>
+          <div class="error-message" *ngIf="permissionName?.invalid && permissionName?.touched">
+            <span *ngIf="permissionName?.errors?.['required']">Permission name is required</span>
+            <span *ngIf="permissionName?.errors?.['minlength']">Minimum 3 characters required</span>
+            <span *ngIf="permissionName?.errors?.['pattern']">Only uppercase letters and underscores allowed</span>
+          </div>
+        </div>
+
+        <!-- Module Selection -->
+        <div class="form-group">
+          <label for="module" class="input-label">
+            <svg class="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+            Module *
+          </label>
+          <select
+            id="module"
+            formControlName="module"
+            class="input-field"
+            [class.error]="module?.invalid && module?.touched"
+          >
+            <option [value]="''" disabled>Select a module</option>
+            <option *ngFor="let mod of modules" [value]="mod">
+              {{ getModuleLabel(mod) }}
+            </option>
+          </select>
+          
+          <!-- ✅ CLICKABLE MODULE ICONS GRID -->
+          <div class="module-icons-grid">
+            <div 
+              *ngFor="let mod of modules" 
+              class="module-icon-box"
+              [class.selected]="isModuleSelected(mod)"
+              (click)="selectModule(mod)"
+            >
+              <span class="material-symbols-outlined">{{ getModuleIcon(mod) }}</span>
+              <span class="module-label">{{ getModuleLabel(mod) }}</span>
+            </div>
+          </div>
+          
+          <div class="error-message" *ngIf="module?.invalid && module?.touched">
+            <span *ngIf="module?.errors?.['required']">Module is required</span>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="description" class="input-label">
+            <svg class="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+            </svg>
+            Description *
+          </label>
+          <textarea
+            id="description"
+            formControlName="description"
+            class="input-field textarea-field"
+            placeholder="Describe what this permission allows..."
+            rows="3"
+            [class.error]="description?.invalid && description?.touched"
+          ></textarea>
+          <div class="char-count">
+            {{ description?.value?.length || 0 }} characters
+          </div>
+          <div class="error-message" *ngIf="description?.invalid && description?.touched">
+            <span *ngIf="description?.errors?.['required']">Description is required</span>
+            <span *ngIf="description?.errors?.['minlength']">Minimum 10 characters required</span>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="cancel()"
+            [disabled]="isSubmitting()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="isSubmitting() || permissionForm.invalid"
+          >
+            <span *ngIf="!isSubmitting()">
+              <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Create Permission
+            </span>
+            <span *ngIf="isSubmitting()" class="loading-text">
+              <span class="spinner"></span>
+              Creating...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Templates Panel -->
+    <div class="templates-panel">
+      <div class="panel-header">
+        <svg class="header-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+        </svg>
+        <h3>Quick Templates</h3>
+      </div>
+      <p class="panel-description">Select a module first, then choose a template</p>
+
+      <div class="templates-list" *ngIf="module?.value">
+        <div class="selected-module">
+          <span class="material-symbols-outlined module-icon-large">{{ getModuleIcon(module?.value) }}</span>
+          <span class="selected-module-name">{{ getModuleLabel(module?.value) }}</span>
+        </div>
+        
+        <div 
+          *ngFor="let template of permissionTemplates"
+          class="template-card"
+          (click)="useTemplate(module?.value, template)"
+        >
+          <div class="template-header">
+            <span class="template-name">{{ template.name }}</span>
+            <svg class="template-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+          </div>
+          <p class="template-description">{{ template.description }}</p>
+          <div class="template-preview">
+            {{ module?.value }}_{{ template.name }}
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!module?.value" class="no-module-selected">
+        <svg class="no-module-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p>Please select a module first to see templates</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,349 @@
+<div class="audit-log-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">history</span>
+        Audit Logs
+      </h1>
+      <p class="page-subtitle">Complete system activity tracking and audit trail</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-refresh" (click)="loadAuditLogs()">
+        <span class="material-icons">refresh</span>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-icons">inventory</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Logs</span>
+        <span class="stat-value">{{ stats().total }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-today">
+      <div class="stat-icon">
+        <span class="material-icons">today</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Today</span>
+        <span class="stat-value">{{ stats().today }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-create">
+      <div class="stat-icon">
+        <span class="material-icons">add_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Creates</span>
+        <span class="stat-value">{{ stats().creates }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-update">
+      <div class="stat-icon">
+        <span class="material-icons">edit</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Updates</span>
+        <span class="stat-value">{{ stats().updates }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-delete">
+      <div class="stat-icon">
+        <span class="material-icons">delete</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Deletes</span>
+        <span class="stat-value">{{ stats().deletes }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by user, entity, ID..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select 
+      [value]="selectedEntityType()"
+      (change)="updateEntityType($any($event.target).value)"
+      class="entity-filter"
+    >
+      <option *ngFor="let type of entityTypes" [value]="type">
+        {{ type === 'ALL' ? 'All Entities' : type }}
+      </option>
+    </select>
+
+    <select 
+      [value]="selectedAction()"
+      (change)="updateAction($any($event.target).value)"
+      class="action-filter"
+    >
+      <option *ngFor="let action of actionTypes" [value]="action">
+        {{ action === 'ALL' ? 'All Actions' : action.replace('_', ' ') }}
+      </option>
+    </select>
+
+    <input
+      type="date"
+      [value]="startDate()"
+      (change)="updateStartDate($any($event.target).value)"
+      class="date-filter"
+      placeholder="Start Date"
+    />
+
+    <input
+      type="date"
+      [value]="endDate()"
+      (change)="updateEndDate($any($event.target).value)"
+      class="date-filter"
+      placeholder="End Date"
+    />
+
+    <button class="btn-clear" (click)="clearFilters()" *ngIf="searchTerm() || selectedEntityType() !== 'ALL' || selectedAction() !== 'ALL' || startDate() || endDate()">
+      <span class="material-icons">clear</span>
+      Clear
+    </button>
+  </div>
+
+  <!-- Results Count -->
+  <div class="results-info">
+    <span class="results-count">
+      Showing {{ paginatedLogs().length }} of {{ filteredLogs().length }} logs
+    </span>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading audit logs...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading()" class="table-container">
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th><span class="material-icons">tag</span> ID</th>
+          <th><span class="material-icons">category</span> ENTITY</th>
+          <th><span class="material-icons">touch_app</span> ACTION</th>
+          <th><span class="material-icons">person</span> PERFORMED BY</th>
+          <th><span class="material-icons">computer</span> IP ADDRESS</th>
+          <th><span class="material-icons">schedule</span> TIMESTAMP</th>
+          <th><span class="material-icons">visibility</span> ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of paginatedLogs()" class="table-row">
+          
+          <!-- ID -->
+          <td>
+            <span class="audit-id-badge">#{{ log.auditId }}</span>
+          </td>
+
+          <!-- Entity -->
+          <td>
+            <div class="entity-cell">
+              <span class="entity-type">{{ log.entityType }}</span>
+              <span class="entity-id">ID: {{ log.entityId }}</span>
+            </div>
+          </td>
+
+          <!-- Action -->
+          <td>
+            <span class="action-badge" [ngClass]="getActionClass(log.action)">
+              <span class="material-icons action-icon">{{ getActionIcon(log.action) }}</span>
+              {{ log.action.replace('_', ' ') }}
+            </span>
+          </td>
+
+          <!-- Performed By -->
+          <td>
+            <div class="user-cell">
+              <span class="material-icons user-icon">account_circle</span>
+              <div class="user-info">
+                <span class="user-name">{{ log.performedByUserName }}</span>
+                <span class="user-email">{{ log.performedByUserEmail }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- IP Address -->
+          <td>
+            <span class="ip-address">
+              <span class="material-icons ip-icon">wifi</span>
+              {{ log.ipAddress }}
+            </span>
+          </td>
+
+          <!-- Timestamp -->
+          <td>
+            <div class="timestamp-cell">
+              <span class="timestamp-date">{{ log.performedAt | date: 'dd MMM yyyy' }}</span>
+              <span class="timestamp-time">{{ log.performedAt | date: 'HH:mm:ss' }}</span>
+            </div>
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <button 
+              class="btn-view"
+              (click)="viewDetails(log)"
+              title="View Details"
+            >
+              <span class="material-icons">visibility</span>
+            </button>
+          </td>
+        </tr>
+
+        <!-- No Data -->
+        <tr *ngIf="paginatedLogs().length === 0" class="no-data-row">
+          <td colspan="7" class="no-data-cell">
+            <span class="material-icons no-data-icon">history</span>
+            <p>No audit logs found</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages() > 1">
+    <button 
+      class="pagination-btn"
+      [disabled]="currentPage() === 1"
+      (click)="goToPage(currentPage() - 1)"
+    >
+      <span class="material-icons">chevron_left</span>
+    </button>
+
+    <ng-container *ngFor="let page of getPaginationRange()">
+      <button 
+        *ngIf="page !== -1"
+        class="pagination-btn"
+        [class.active]="page === currentPage()"
+        (click)="goToPage(page)"
+      >
+        {{ page }}
+      </button>
+      <span *ngIf="page === -1" class="pagination-ellipsis">...</span>
+    </ng-container>
+
+    <button 
+      class="pagination-btn"
+      [disabled]="currentPage() === totalPages()"
+      (click)="goToPage(currentPage() + 1)"
+    >
+      <span class="material-icons">chevron_right</span>
+    </button>
+  </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal-overlay" *ngIf="showDetailsModal()" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <span class="material-icons">info</span>
+        Audit Log Details
+      </h2>
+      <button class="btn-close-modal" (click)="closeModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedLog()">
+      
+      <!-- Basic Info -->
+      <div class="detail-section">
+        <h3 class="section-title">Basic Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Audit ID:</span>
+            <span class="detail-value">#{{ selectedLog()?.auditId }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Entity Type:</span>
+            <span class="detail-value">{{ selectedLog()?.entityType }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Entity ID:</span>
+            <span class="detail-value">{{ selectedLog()?.entityId }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Action:</span>
+            <span class="action-badge" [ngClass]="getActionClass(selectedLog()!.action)">
+              {{ selectedLog()?.action }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Info -->
+      <div class="detail-section">
+        <h3 class="section-title">Performed By</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">User Name:</span>
+            <span class="detail-value">{{ selectedLog()?.performedByUserName }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Email:</span>
+            <span class="detail-value">{{ selectedLog()?.performedByUserEmail }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">IP Address:</span>
+            <span class="detail-value">{{ selectedLog()?.ipAddress }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Timestamp:</span>
+            <span class="detail-value">{{ selectedLog()?.performedAt | date: 'dd MMM yyyy, HH:mm:ss' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Old Value -->
+      <div class="detail-section" *ngIf="selectedLog()?.oldValue">
+        <h3 class="section-title">Old Value</h3>
+        <pre class="json-display">{{ formatJson(selectedLog()!.oldValue) }}</pre>
+      </div>
+
+      <!-- New Value -->
+      <div class="detail-section" *ngIf="selectedLog()?.newValue">
+        <h3 class="section-title">New Value</h3>
+        <pre class="json-display">{{ formatJson(selectedLog()!.newValue) }}</pre>
+      </div>
+
+      <!-- User Agent -->
+      <div class="detail-section" *ngIf="selectedLog()?.userAgent">
+        <h3 class="section-title">User Agent</h3>
+        <p class="user-agent-text">{{ selectedLog()?.userAgent }}</p>
+      </div>
+
+    </div>
+  </div>
+</div>

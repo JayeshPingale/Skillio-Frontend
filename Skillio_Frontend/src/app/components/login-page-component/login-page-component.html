@@ -1,0 +1,264 @@
+<div class="login-wrapper">
+  <!-- Left Panel -->
+  <div class="left-panel">
+    <div class="login-container">
+      <div class="logo-section">
+        <div class="logo-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="logo-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </div>
+
+        <!-- Theme Toggle Button -->
+        <button type="button" class="theme-toggle" (click)="toggleTheme()"
+          [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
+          <!-- Sun Icon (Light Mode) -->
+          <svg *ngIf="themeService.isDark()" class="theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+
+          <!-- Moon Icon (Dark Mode) -->
+          <svg *ngIf="themeService.isLight()" class="theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+      </div>
+
+      <h1 class="login-title">Welcome Back</h1>
+      <p class="login-subtitle">Login to access your Skillio account</p>
+
+      <div *ngIf="successMessage()" class="success-alert">
+        <svg class="success-icon" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            clip-rule="evenodd" />
+        </svg>
+        <span>{{ successMessage() }}</span>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage()" class="error-alert">
+        <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clip-rule="evenodd" />
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+
+      <!-- Login Form -->
+      <form (ngSubmit)="onSubmit()" class="login-form">
+        <!-- Email Input -->
+        <div class="input-group">
+          <label for="email" class="input-label">
+            <svg class="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+            </svg>
+            Email Address
+          </label>
+          <input type="email" id="email" [ngModel]="email()" (ngModelChange)="updateEmail($event)" name="email"
+            [disabled]="isLoading()" class="input-field" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+
+        <!-- Password Input -->
+        <div class="input-group">
+          <label for="password" class="input-label">
+            <svg class="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Password
+          </label>
+          <div class="password-wrapper">
+            <input [type]="showPassword() ? 'text' : 'password'" id="password" [ngModel]="password()"
+              (ngModelChange)="updatePassword($event)" name="password" [disabled]="isLoading()" class="input-field"
+              placeholder="Enter your password" autocomplete="current-password" required />
+            <button type="button" class="toggle-password" (click)="togglePasswordVisibility()" [disabled]="isLoading()">
+              <svg *ngIf="!showPassword()" class="eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <svg *ngIf="showPassword()" class="eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember & Forgot -->
+        <div class="form-options">
+          <label class="remember-checkbox">
+            <input type="checkbox" />
+            <span>Remember me</span>
+          </label>
+          <a routerLink="/forgot-password" [queryParams]="email() ? { email: email() } : {}" class="forgot-link">
+            Forgot Password?
+          </a>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" [disabled]="isLoading()" class="login-button">
+          <span *ngIf="!isLoading()" class="button-content">
+            <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            Sign In
+          </span>
+          <span *ngIf="isLoading()" class="loading-text">
+            <span class="spinner"></span>
+            Signing in...
+          </span>
+        </button>
+      </form>
+
+
+
+      <!-- Social Login -->
+      <!-- <div class="social-buttons">
+        <button type="button" class="social-button google">
+          <svg class="social-icon" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Continue with Google
+        </button>
+      </div> -->
+
+      <!-- Sign Up -->
+      <!-- <div class="signup-section">
+        <span class="signup-text">Don't have an account?</span>
+        <a href="#" class="signup-link">Create Account</a>
+      </div> -->
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+
+
+  <!-- Right Panel - Welcome Section -->
+  <div class="right-panel">
+    <div class="welcome-content">
+      <div class="brand-section">
+        <h1 class="welcome-title">Skillio Portal</h1>
+        <div class="brand-tagline">Empowering Your Learning Journey</div>
+      </div>
+
+      <p class="welcome-subtitle">Join thousands of learners achieving their goals with our comprehensive platform</p>
+
+      <!-- Features List -->
+      <div class="features-list">
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <span>Track Your Progress</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <span>Access Premium Content</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <span>Connect with Mentors</span>
+        </div>
+      </div>
+
+      <!-- Illustration -->
+      <div class="illustration">
+        <svg viewBox="0 0 800 500" class="illustration-svg">
+          <!-- Background gradient -->
+          <defs>
+            <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:rgba(255,255,255,0.1);stop-opacity:1" />
+              <stop offset="100%" style="stop-color:rgba(255,255,255,0.05);stop-opacity:1" />
+            </linearGradient>
+          </defs>
+
+          <!-- Decorative circles -->
+          <circle cx="150" cy="100" r="60" fill="rgba(255,255,255,0.08)" class="float-1" />
+          <circle cx="650" cy="400" r="80" fill="rgba(255,255,255,0.08)" class="float-2" />
+          <circle cx="700" cy="150" r="40" fill="rgba(255,255,255,0.08)" class="float-3" />
+
+          <!-- Main platform illustration -->
+          <g class="platform-group">
+            <!-- Laptop screen -->
+            <rect x="250" y="180" width="300" height="200" rx="10" fill="white" stroke="#2d2d2d" stroke-width="4" />
+            <rect x="270" y="200" width="260" height="150" rx="5" fill="url(#bgGrad)" />
+
+            <!-- Screen content lines -->
+            <line x1="290" y1="220" x2="450" y2="220" stroke="#a78bfa" stroke-width="6" stroke-linecap="round" />
+            <line x1="290" y1="245" x2="510" y2="245" stroke="#d1d5db" stroke-width="4" stroke-linecap="round" />
+            <line x1="290" y1="265" x2="480" y2="265" stroke="#d1d5db" stroke-width="4" stroke-linecap="round" />
+            <line x1="290" y1="285" x2="510" y2="285" stroke="#d1d5db" stroke-width="4" stroke-linecap="round" />
+
+            <!-- Play button on screen -->
+            <circle cx="400" cy="310" r="25" fill="#a78bfa" opacity="0.9" />
+            <path d="M 395 300 L 395 320 L 410 310 Z" fill="white" />
+
+            <!-- Laptop base -->
+            <path d="M 220 380 L 250 380 L 250 385 L 550 385 L 550 380 L 580 380 L 600 400 L 200 400 Z"
+              fill="#2d2d2d" />
+            <rect x="380" y="385" width="40" height="8" rx="4" fill="#6b7280" />
+          </g>
+
+          <!-- Floating books -->
+          <g class="books" transform="translate(100, 250)">
+            <rect x="0" y="0" width="50" height="70" rx="3" fill="#a78bfa" opacity="0.8" />
+            <rect x="5" y="5" width="40" height="60" fill="rgba(255,255,255,0.2)" />
+            <line x1="25" y1="10" x2="25" y2="65" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+          </g>
+
+          <!-- Certificate icon -->
+          <g class="certificate" transform="translate(630, 250)">
+            <rect x="0" y="0" width="70" height="50" rx="3" fill="white" stroke="#a78bfa" stroke-width="3" />
+            <circle cx="35" cy="20" r="8" fill="none" stroke="#a78bfa" stroke-width="2" />
+            <path d="M 35 28 L 30 35 L 35 33 L 40 35 Z" fill="#a78bfa" />
+            <line x1="15" y1="35" x2="55" y2="35" stroke="#d1d5db" stroke-width="2" stroke-linecap="round" />
+            <line x1="20" y1="42" x2="50" y2="42" stroke="#d1d5db" stroke-width="2" stroke-linecap="round" />
+          </g>
+        </svg>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-section">
+        <div class="stat-item">
+          <div class="stat-number">10K+</div>
+          <div class="stat-label">Active Learners</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-number">500+</div>
+          <div class="stat-label">Courses</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-number">95%</div>
+          <div class="stat-label">Success Rate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

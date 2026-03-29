@@ -1,0 +1,191 @@
+/* ==================== GLOBAL THEME VARIABLES ==================== */
+/* Import Material Icons */
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  /* overflow: hidden !important;  <-- YE LINE HATA DI */
+  min-height: 100vh; /* height: 100vh ki jagah min-height use karein */
+  width: 100%; /* 100vw ki jagah 100% safer hai */
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden; /* Sirf horizontal scroll hatayein */
+}
+
+/* ==================== DARK THEME (DEFAULT) ==================== */
+:root,
+html.dark-theme,
+html[data-theme='dark'] {
+  /* Background Colors */
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #2d2d2d;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-hover: rgba(255, 255, 255, 0.08);
+
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #e5e7eb;
+  --text-tertiary: #9ca3af;
+  --text-muted: #6b7280;
+
+  /* Border Colors */
+  --border-primary: rgba(255, 255, 255, 0.12);
+  --border-secondary: rgba(255, 255, 255, 0.1);
+  --border-focus: #a78bfa;
+
+  /* Accent Colors */
+  --accent-primary: #a78bfa;
+  --accent-secondary: #8b5cf6;
+  --accent-tertiary: #7c3aed;
+
+  /* Gradient Colors */
+  --gradient-primary: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  --gradient-secondary: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  --gradient-bg: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+
+  /* Shadow */
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 8px 24px rgba(167, 139, 250, 0.35);
+  --shadow-lg: 0 12px 32px rgba(167, 139, 250, 0.45);
+
+  /* Error Colors */
+  --error-bg: rgba(239, 68, 68, 0.15);
+  --error-border: rgba(239, 68, 68, 0.4);
+  --error-text: #fca5a5;
+  --error-icon: #ef4444;
+
+  /* Input Colors */
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --input-border: rgba(255, 255, 255, 0.12);
+  --input-placeholder: #6b7280;
+}
+
+/* ==================== LIGHT THEME ==================== */
+html.light-theme,
+html[data-theme='light'] {
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --bg-card: #ffffff;
+  --bg-hover: #f3f4f6;
+
+  /* Text Colors */
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-tertiary: #6b7280;
+  --text-muted: #9ca3af;
+
+  /* Border Colors */
+  --border-primary: #e5e7eb;
+  --border-secondary: #d1d5db;
+  --border-focus: #8b5cf6;
+
+  /* Accent Colors */
+  --accent-primary: #8b5cf6;
+  --accent-secondary: #7c3aed;
+  --accent-tertiary: #6d28d9;
+
+  /* Gradient Colors */
+  --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  --gradient-secondary: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  --gradient-bg: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+
+  /* Shadow */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(139, 92, 246, 0.2);
+  --shadow-lg: 0 8px 24px rgba(139, 92, 246, 0.3);
+
+  /* Error Colors */
+  --error-bg: #fee2e2;
+  --error-border: #fca5a5;
+  --error-text: #dc2626;
+  --error-icon: #ef4444;
+
+  /* Input Colors */
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --input-placeholder: #9ca3af;
+}
+
+/* Apply theme to body */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Scrollbar styling (optional but looks better) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.5);
+}
+select option {
+  background-color: var(--bg-secondary); /* Dark background (greyish) */
+  color: var(--text-primary); /* White text */
+}
+
+/* ==================== GLOBAL MOBILE RESPONSIVENESS FIXES ==================== */
+@media (max-width: 768px) {
+  /* Prevent horizontal overflow globally */
+  * {
+    max-width: 100%;
+  }
+
+  html, body {
+    width: 100%;
+    overflow-x: hidden;
+    position: relative;
+  }
+  
+  /* Ensure grids adapt automatically on mobile */
+  .stats-grid, .roles-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Basic form inputs constraints */
+  input, select, textarea, button {
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  /* Fix for overflowing tables inside wrappers */
+  .table-container, .table-wrapper, .sales-table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+    display: block;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    max-width: none; /* override the global max-width 100% for tables to allow scrolling */
+  }
+
+  /* Any fixed modal or card should not exceed the viewport width */
+  .modal, .modal-content, .card {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+}

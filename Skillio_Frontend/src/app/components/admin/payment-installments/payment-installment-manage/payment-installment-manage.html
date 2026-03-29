@@ -1,0 +1,241 @@
+<div class="installment-manage-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">calendar_month</span>
+        {{ isEditMode() ? 'Edit Installment' : 'Create New Installment' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ isEditMode() ? 'Update installment details' : 'Create a new payment installment for student fees' }}
+      </p>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-icons btn-icon">arrow_back</span>
+        Back to List
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading data...</p>
+  </div>
+
+  <!-- Form Card -->
+  <div *ngIf="!isLoading()" class="form-card">
+    
+    <!-- Selected Fees Info Card -->
+    <div *ngIf="selectedFees() && !isEditMode()" class="info-card">
+      <div class="info-header">
+        <span class="material-icons info-icon">receipt_long</span>
+        <span class="info-title">Selected Fees Details</span>
+      </div>
+      <div class="info-content">
+        <div class="info-item">
+          <span class="info-label">Student:</span>
+          <span class="info-value">{{ selectedFees()?.studentName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Course:</span>
+          <span class="info-value">{{ selectedFees()?.courseName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Batch:</span>
+          <span class="info-value">{{ selectedFees()?.batchName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Total Fees:</span>
+          <span class="info-value">₹{{ selectedFees()?.totalFees | number }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Amount Paid:</span>
+          <span class="info-value">₹{{ selectedFees()?.paidAmount | number }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Balance Amount:</span>
+          <span class="info-value balance-highlight">₹{{ selectedFees()?.balanceAmount | number }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="installmentForm" (ngSubmit)="onSubmit()">
+      
+      <!-- Fees Selection (Create mode only) -->
+      <div class="form-group" *ngIf="!isEditMode()">
+        <label class="form-label">
+          <span class="material-icons label-icon">school</span>
+          Select Student Fees
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">search</span>
+          <select 
+            formControlName="feesId" 
+            class="form-select"
+            [class.input-error]="installmentForm.get('feesId')?.invalid && installmentForm.get('feesId')?.touched"
+          >
+            <option value="">-- Select fees record --</option>
+            <option *ngFor="let fees of studentFees()" [value]="fees.feesId">
+              {{ fees.studentName }} - {{ fees.courseName }} (Balance: ₹{{ fees.balanceAmount | number }})
+            </option>
+          </select>
+        </div>
+        <span 
+          class="error-message" 
+          *ngIf="installmentForm.get('feesId')?.invalid && installmentForm.get('feesId')?.touched"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Please select a fees record
+        </span>
+      </div>
+
+      <!-- Two Column Layout -->
+      <div class="form-row">
+        <!-- Installment Number (Create mode only) -->
+        <div class="form-group" *ngIf="!isEditMode()">
+          <label class="form-label">
+            <span class="material-icons label-icon">format_list_numbered</span>
+            Installment Number
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">tag</span>
+            <input
+              type="number"
+              formControlName="installmentNumber"
+              class="form-input"
+              placeholder="Enter installment number"
+              min="1"
+              [class.input-error]="installmentForm.get('installmentNumber')?.invalid && installmentForm.get('installmentNumber')?.touched"
+            />
+          </div>
+          <span 
+            class="error-message" 
+            *ngIf="installmentForm.get('installmentNumber')?.invalid && installmentForm.get('installmentNumber')?.touched"
+          >
+            <span class="material-icons error-icon-small">error</span>
+            <span *ngIf="installmentForm.get('installmentNumber')?.errors?.['required']">Installment number is required</span>
+            <span *ngIf="installmentForm.get('installmentNumber')?.errors?.['min']">Installment number must be at least 1</span>
+          </span>
+        </div>
+
+        <!-- Installment Amount -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">currency_rupee</span>
+            Installment Amount
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">payments</span>
+            <input
+              type="number"
+              formControlName="installmentAmount"
+              class="form-input"
+              placeholder="Enter installment amount"
+              min="1"
+              [class.input-error]="installmentForm.get('installmentAmount')?.invalid && installmentForm.get('installmentAmount')?.touched"
+            />
+          </div>
+          <span 
+            class="error-message" 
+            *ngIf="installmentForm.get('installmentAmount')?.invalid && installmentForm.get('installmentAmount')?.touched"
+          >
+            <span class="material-icons error-icon-small">error</span>
+            <span *ngIf="installmentForm.get('installmentAmount')?.errors?.['required']">Amount is required</span>
+            <span *ngIf="installmentForm.get('installmentAmount')?.errors?.['min']">Amount must be at least 1</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Due Date -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">event</span>
+          Due Date
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">calendar_today</span>
+          <input
+            type="date"
+            formControlName="dueDate"
+            class="form-input"
+            [class.input-error]="installmentForm.get('dueDate')?.invalid && installmentForm.get('dueDate')?.touched"
+          />
+        </div>
+        <span 
+          class="error-message" 
+          *ngIf="installmentForm.get('dueDate')?.invalid && installmentForm.get('dueDate')?.touched"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Due date is required
+        </span>
+      </div>
+
+      <!-- Payment Status (Edit mode only) -->
+      <div class="form-group" *ngIf="isEditMode()">
+        <label class="form-label">
+          <span class="material-icons label-icon">info</span>
+          Payment Status
+          <span class="required">*</span>
+        </label>
+        <div class="status-selector">
+          <label 
+            *ngFor="let status of statusOptions" 
+            class="status-option"
+            [class.status-selected]="installmentForm.get('paymentStatus')?.value === status"
+          >
+            <input 
+              type="radio" 
+              formControlName="paymentStatus" 
+              [value]="status"
+              class="status-radio"
+            />
+            <div class="status-content" [ngClass]="getStatusClass(status)">
+              <span class="material-icons status-icon">{{ getStatusIcon(status) }}</span>
+              <span class="status-label">{{ status }}</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn-cancel" 
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-icons btn-icon">close</span>
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn-submit"
+          [disabled]="isSubmitting() || installmentForm.invalid"
+        >
+          <span class="material-icons btn-icon" *ngIf="!isSubmitting()">save</span>
+          <span class="spinner-small" *ngIf="isSubmitting()"></span>
+          {{ isSubmitting() ? (isEditMode() ? 'Updating...' : 'Creating...') : (isEditMode() ? 'Update Installment' : 'Create Installment') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

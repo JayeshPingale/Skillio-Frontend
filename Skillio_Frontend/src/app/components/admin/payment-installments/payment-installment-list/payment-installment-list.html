@@ -1,0 +1,267 @@
+<div class="installment-list-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">calendar_month</span>
+        Payment Installments
+      </h1>
+      <p class="page-subtitle">Manage and track student fee installments</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-create" (click)="navigateToCreate()">
+        <span class="material-icons btn-icon">add_circle</span>
+        Create Installment
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-icons">receipt_long</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Installments</span>
+        <span class="stat-value">{{ stats().total }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-pending">
+      <div class="stat-icon">
+        <span class="material-icons">pending</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Pending</span>
+        <span class="stat-value">{{ stats().pending }}</span>
+        <span class="stat-amount">₹{{ stats().pendingAmount | number }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-paid">
+      <div class="stat-icon">
+        <span class="material-icons">check_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Paid</span>
+        <span class="stat-value">{{ stats().paid }}</span>
+        <span class="stat-amount">₹{{ stats().paidAmount | number }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-overdue">
+      <div class="stat-icon">
+        <span class="material-icons">error</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Overdue</span>
+        <span class="stat-value">{{ stats().overdue }}</span>
+        <span class="stat-amount">₹{{ stats().overdueAmount | number }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by student, course, or installment number..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select 
+      [value]="selectedStatus()"
+      (change)="updateStatus($any($event.target).value)"
+      class="status-filter"
+    >
+      <option *ngFor="let status of statusOptions" [value]="status">
+        {{ status === 'ALL' ? 'All Status' : status }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading installments...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading()" class="table-container">
+    <table class="installments-table">
+      <thead>
+        <tr>
+          <th class="th-id">
+            <span class="material-icons th-icon">tag</span>
+            ID
+          </th>
+          <th class="th-installment">
+            <span class="material-icons th-icon">format_list_numbered</span>
+            INSTALLMENT #
+          </th>
+          <th class="th-student">
+            <span class="material-icons th-icon">person</span>
+            STUDENT
+          </th>
+          <th class="th-course">
+            <span class="material-icons th-icon">book</span>
+            COURSE
+          </th>
+          <th class="th-amount">
+            <span class="material-icons th-icon">currency_rupee</span>
+            AMOUNT
+          </th>
+          <th class="th-due-date">
+            <span class="material-icons th-icon">event</span>
+            DUE DATE
+          </th>
+          <th class="th-status">
+            <span class="material-icons th-icon">info</span>
+            STATUS
+          </th>
+          <th class="th-paid-date">
+            <span class="material-icons th-icon">check</span>
+            PAID DATE
+          </th>
+          <th class="th-created">
+            <span class="material-icons th-icon">schedule</span>
+            CREATED AT
+          </th>
+          <th class="th-actions">
+            <span class="material-icons th-icon">settings</span>
+            ACTIONS
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let installment of filteredInstallments()" class="table-row"
+            [class.row-overdue]="isOverdue(installment.dueDate, installment.paymentStatus)">
+          
+          <!-- ID -->
+          <td class="td-id">
+            <span class="installment-id-badge">#{{ installment.installmentId }}</span>
+          </td>
+
+          <!-- Installment Number -->
+          <td class="td-installment">
+            <span class="installment-number">
+              <span class="material-icons number-icon">looks_one</span>
+              Installment {{ installment.installmentNumber }}
+            </span>
+          </td>
+
+          <!-- Student -->
+          <td class="td-student">
+            <div class="student-cell">
+              <span class="material-icons student-icon">account_circle</span>
+              <span class="student-name">{{ installment.studentName }}</span>
+            </div>
+          </td>
+
+          <!-- Course -->
+          <td class="td-course">
+            <div class="course-cell">
+              <span class="material-icons course-icon">book</span>
+              <span class="course-name">{{ installment.courseName }}</span>
+            </div>
+          </td>
+
+          <!-- Amount -->
+          <td class="td-amount">
+            <span class="amount-text">
+              <span class="material-icons amount-icon">currency_rupee</span>
+              {{ installment.installmentAmount | number }}
+            </span>
+          </td>
+
+          <!-- Due Date -->
+          <td class="td-due-date">
+            <div class="date-cell">
+              <span class="material-icons date-icon">event</span>
+              <span [class.date-overdue]="isOverdue(installment.dueDate, installment.paymentStatus)">
+                {{ installment.dueDate | date: 'dd MMM yyyy' }}
+              </span>
+            </div>
+          </td>
+
+          <!-- Status -->
+          <td class="td-status">
+            <span class="status-badge" [ngClass]="getStatusClass(installment.paymentStatus)">
+              <span class="material-icons status-icon">{{ getStatusIcon(installment.paymentStatus) }}</span>
+              {{ installment.paymentStatus }}
+            </span>
+          </td>
+
+          <!-- Paid Date -->
+          <td class="td-paid-date">
+            <span class="paid-date-text" *ngIf="installment.paidDate">
+              {{ installment.paidDate | date: 'dd MMM yyyy' }}
+            </span>
+            <span class="paid-date-text empty" *ngIf="!installment.paidDate">-</span>
+          </td>
+
+          <!-- Created At -->
+          <td class="td-created">
+            <span class="created-text">
+              {{ installment.createdAt | date: 'dd MMM yyyy, hh:mm a' }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td class="td-actions">
+            <div class="actions-cell">
+              <button 
+                *ngIf="installment.paymentStatus === 'PENDING' || installment.paymentStatus === 'OVERDUE'"
+                class="btn-action btn-paid"
+                (click)="markAsPaid(installment.installmentId, installment.studentName)"
+                title="Mark as Paid"
+              >
+                <span class="material-icons">check_circle</span>
+              </button>
+              <button 
+                *ngIf="installment.paymentStatus !== 'PAID'"
+                class="btn-action btn-edit"
+                (click)="navigateToEdit(installment.installmentId)"
+                title="Edit Installment"
+              >
+                <span class="material-icons">edit</span>
+              </button>
+              <button 
+                class="btn-action btn-delete"
+                (click)="deleteInstallment(installment.installmentId, installment.studentName)"
+                title="Delete Installment"
+              >
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- No Data -->
+        <tr *ngIf="filteredInstallments().length === 0" class="no-data-row">
+          <td colspan="10" class="no-data-cell">
+            <span class="material-icons no-data-icon">event_busy</span>
+            <p>No installments found matching your criteria</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
