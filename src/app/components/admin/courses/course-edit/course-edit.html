@@ -1,0 +1,210 @@
+<div class="course-edit-wrapper">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Back
+      </button>
+      <div class="header-info">
+        <h1 class="page-title">Edit Course</h1>
+        <p class="page-subtitle" *ngIf="currentCourse()">
+          Update details for {{ currentCourse()?.courseName }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-symbols-outlined success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-symbols-outlined error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading course details...</p>
+  </div>
+
+  <!-- Form Card -->
+  <div *ngIf="!isLoading()" class="form-card">
+    <!-- Course Info Badge -->
+    <div class="course-info-badge" *ngIf="currentCourse()">
+      <div class="course-icon-large">
+        <span class="material-symbols-outlined">menu_book</span>
+      </div>
+      <div class="course-details">
+        <h3>{{ currentCourse()?.courseName }}</h3>
+        <p>Course ID: #{{ currentCourse()?.courseId }}</p>
+        <div class="course-meta">
+          <span class="meta-item">
+            <span class="material-symbols-outlined">schedule</span>
+            {{ currentCourse()?.duration }}
+          </span>
+          <span class="meta-item">
+            <span class="material-symbols-outlined">payments</span>
+            {{ formatCurrency(currentCourse()?.totalFees || 0) }}
+          </span>
+          <span class="created-text">
+            <span class="material-symbols-outlined">calendar_today</span>
+            Created: {{ currentCourse()?.createdAt | date: 'dd MMM yyyy' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="courseForm" (ngSubmit)="onSubmit()">
+      <!-- Course Name -->
+      <div class="form-group">
+        <label for="courseName" class="input-label">
+          <span class="material-symbols-outlined label-icon">label</span>
+          Course Name *
+        </label>
+        <input
+          type="text"
+          id="courseName"
+          formControlName="courseName"
+          class="input-field"
+          placeholder="e.g., Java Full Stack Development"
+          [class.error]="courseName?.invalid && courseName?.touched"
+        />
+        <div class="error-message" *ngIf="courseName?.invalid && courseName?.touched">
+          <span *ngIf="courseName?.errors?.['required']">Course name is required</span>
+          <span *ngIf="courseName?.errors?.['minlength']">Minimum 3 characters required</span>
+        </div>
+      </div>
+
+      <!-- Course Description -->
+      <div class="form-group">
+        <label for="description" class="input-label">
+          <span class="material-symbols-outlined label-icon">description</span>
+          Course Description *
+        </label>
+        <textarea
+          id="description"
+          formControlName="description"
+          class="input-field textarea-field"
+          placeholder="Describe the course content, objectives, and outcomes..."
+          rows="4"
+          [class.error]="description?.invalid && description?.touched"
+        ></textarea>
+        <div class="char-count">
+          {{ description?.value?.length || 0 }} characters
+        </div>
+        <div class="error-message" *ngIf="description?.invalid && description?.touched">
+          <span *ngIf="description?.errors?.['required']">Description is required</span>
+          <span *ngIf="description?.errors?.['minlength']">Minimum 10 characters required</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- Duration -->
+        <div class="form-group">
+          <label for="duration" class="input-label">
+            <span class="material-symbols-outlined label-icon">schedule</span>
+            Duration *
+          </label>
+          <input
+            type="text"
+            id="duration"
+            formControlName="duration"
+            class="input-field"
+            placeholder="e.g., 6 Months, 12 Weeks"
+            [class.error]="duration?.invalid && duration?.touched"
+          />
+          <div class="error-message" *ngIf="duration?.invalid && duration?.touched">
+            <span *ngIf="duration?.errors?.['required']">Duration is required</span>
+          </div>
+        </div>
+
+        <!-- Fees -->
+        <div class="form-group">
+          <label for="totalFees" class="input-label">
+            <span class="material-symbols-outlined label-icon">payments</span>
+            Course Fees (₹) *
+          </label>
+          <input
+            type="number"
+            id="totalFees"
+            formControlName="totalFees"
+            class="input-field"
+            placeholder="Enter course fees"
+            min="100"
+            [class.error]="totalFees?.invalid && totalFees?.touched"
+          />
+          <div class="error-message" *ngIf="totalFees?.invalid && totalFees?.touched">
+            <span *ngIf="totalFees?.errors?.['required']">Fees is required</span>
+            <span *ngIf="totalFees?.errors?.['min']">Fees must be at least 100</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Status Toggle -->
+      <div class="form-group">
+        <label class="input-label">
+          <span class="material-symbols-outlined label-icon">toggle_on</span>
+          Course Status
+        </label>
+        <div class="toggle-container">
+          <button
+            type="button"
+            class="toggle-button"
+            [class.active]="isActive?.value"
+            (click)="toggleActiveStatus()"
+          >
+            <div class="toggle-slider" [class.active]="isActive?.value">
+              <span class="material-symbols-outlined toggle-icon">
+                {{ isActive?.value ? 'check' : 'close' }}
+              </span>
+            </div>
+          </button>
+          <div class="toggle-info">
+            <span class="toggle-label" [class.active]="isActive?.value">
+              <span class="material-symbols-outlined status-icon">
+                {{ isActive?.value ? 'check_circle' : 'pause_circle' }}
+              </span>
+              {{ isActive?.value ? 'Active' : 'Inactive' }}
+            </span>
+            <span class="toggle-description">
+              {{ isActive?.value ? 'Course is visible and students can enroll' : 'Course is hidden from students' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-symbols-outlined">close</span>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="isSubmitting() || courseForm.invalid"
+        >
+          <span *ngIf="!isSubmitting()">
+            <span class="material-symbols-outlined">save</span>
+            Update Course
+          </span>
+          <span *ngIf="isSubmitting()" class="loading-text">
+            <span class="spinner"></span>
+            Updating...
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

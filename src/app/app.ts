@@ -1,9 +1,10 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog-component/confirmation-dialog-component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet,ConfirmationDialogComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

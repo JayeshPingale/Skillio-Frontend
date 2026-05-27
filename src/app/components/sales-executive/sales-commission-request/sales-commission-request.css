@@ -1,0 +1,509 @@
+.request-commission-wrapper {
+  padding: 24px;
+  background: var(--bg-primary);
+  min-height: 100vh;
+  color: var(--text-primary);
+}
+
+/* ===== HEADER ===== */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+.title-icon { color: var(--accent-primary, #667eea); font-size: 1.8rem !important; }
+.page-subtitle { color: var(--text-secondary); margin: 4px 0 0; font-size: 0.9rem; }
+
+.btn-my-commissions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-my-commissions:hover {
+  border-color: var(--accent-primary, #667eea);
+  color: var(--accent-primary, #667eea);
+}
+
+/* ===== ALERTS ===== */
+.success-alert, .error-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+.success-alert { background: rgba(34,197,94,0.12); color: #16a34a; border: 1px solid rgba(34,197,94,0.3); }
+.error-alert   { background: rgba(239,68,68,0.12);  color: #dc2626; border: 1px solid rgba(239,68,68,0.3); }
+
+/* ===== SEARCH ===== */
+.search-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.search-box {
+  flex: 1;
+  min-width: 260px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-secondary);
+  font-size: 1.1rem !important;
+}
+.search-input {
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+.search-input:focus { outline: none; border-color: var(--accent-primary, #667eea); }
+.result-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.result-count .material-icons { font-size: 1.1rem !important; }
+
+/* ===== LOADING ===== */
+.loading-container {
+  display: flex; flex-direction: column; align-items: center; padding: 60px; gap: 12px;
+}
+.spinner-large {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border-primary);
+  border-top-color: var(--accent-primary, #667eea);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 60px 20px; gap: 12px; text-align: center;
+}
+.empty-icon { font-size: 4rem !important; opacity: 0.3; color: var(--text-secondary); }
+.empty-state h3 { font-size: 1.1rem; color: var(--text-primary); margin: 0; }
+.empty-state p  { font-size: 0.875rem; color: var(--text-secondary); margin: 0; max-width: 360px; }
+
+/* ===== STUDENTS GRID ===== */
+.students-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* ===== STUDENT CARD ===== */
+.student-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.student-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.student-card.already-requested {
+  border-color: rgba(102,126,234,0.3);
+  background: var(--bg-card);
+}
+
+/* Card Header */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.student-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.student-info { flex: 1; min-width: 0; }
+.student-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.student-code {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Commission Status Badge */
+.commission-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.commission-status-badge .material-icons { font-size: 0.85rem !important; }
+.cs-pending          { background: rgba(251,191,36,0.15);  color: #d97706; }
+.cs-pending-approval { background: rgba(139,92,246,0.15);  color: #7c3aed; }
+.cs-approved         { background: rgba(59,130,246,0.15);  color: #2563eb; }
+.cs-eligible         { background: rgba(34,197,94,0.15);   color: #16a34a; }
+.cs-paid             { background: rgba(16,185,129,0.2);   color: #059669; }
+.cs-rejected         { background: rgba(239,68,68,0.15);   color: #dc2626; }
+
+/* Course Info */
+.course-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-hover, rgba(102,126,234,0.06));
+  border-radius: 8px;
+}
+.course-icon { font-size: 1.1rem !important; color: var(--accent-primary, #667eea); }
+.course-name { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+
+/* Fee Details */
+.fee-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fee-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+.fee-label { color: var(--text-secondary); }
+.fee-value { font-weight: 700; }
+.fee-value.total   { color: var(--text-primary); }
+.fee-value.paid    { color: #10b981; }
+.fee-value.pending { color: #f59e0b; }
+
+/* Progress Bar */
+.progress-section { display: flex; flex-direction: column; gap: 6px; }
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.progress-percent { font-weight: 700; color: var(--text-primary); }
+.progress-bar {
+  height: 6px;
+  background: var(--border-primary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+/* Eligible Amount Row */
+.eligible-amount-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #10b981;
+  padding: 6px 10px;
+  background: rgba(16,185,129,0.08);
+  border-radius: 8px;
+}
+.eligible-amount-row .material-icons { font-size: 1rem !important; }
+
+/* Rejection Note */
+.rejection-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #dc2626;
+  padding: 8px 10px;
+  background: rgba(239,68,68,0.08);
+  border-radius: 8px;
+  line-height: 1.4;
+}
+.rejection-note .material-icons { font-size: 1rem !important; flex-shrink: 0; margin-top: 1px; }
+
+/* Card Footer */
+.card-footer { margin-top: auto; }
+.btn-request {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-request:hover { opacity: 0.9; transform: translateY(-1px); }
+.already-requested-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  background: rgba(102,126,234,0.08);
+  border: 1px solid rgba(102,126,234,0.2);
+  border-radius: 10px;
+  color: var(--accent-primary, #667eea);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.already-requested-label .material-icons { font-size: 1rem !important; }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-card {
+  background-color: #ffffff;
+  background-image: none;
+  opacity: 1;
+  position: relative;
+  isolation: isolate;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  overflow: hidden;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border-primary);
+}
+.modal-header h2 {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 1.1rem; font-weight: 700; margin: 0;
+  color: var(--text-primary);
+}
+.modal-header h2 .material-icons { color: var(--accent-primary, #667eea); }
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-secondary); padding: 4px; border-radius: 6px; display: flex;
+}
+.modal-close:hover { background: var(--bg-hover); }
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #ffffff;
+}
+
+/* Student Summary */
+.modal-student-summary {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; background: #f8fafc; border-radius: 10px;
+}
+.summary-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white; font-size: 1rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.summary-name { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+.summary-course { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+
+/* Fee Grid */
+.modal-fee-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+}
+.fee-grid-item {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 10px 12px; background: #f8fafc; border-radius: 8px;
+}
+.fee-grid-item.highlight-box {
+  background: rgba(102,126,234,0.08);
+  border: 1px solid rgba(102,126,234,0.2);
+}
+.fee-grid-label { font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
+.fee-grid-value { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+.fee-grid-value.paid-color    { color: #10b981; }
+.fee-grid-value.pending-color { color: #f59e0b; }
+.fee-grid-value.highlight-color { color: var(--accent-primary, #667eea); }
+
+/* Form */
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.875rem; font-weight: 600; color: var(--text-primary);
+}
+.form-label .material-icons { font-size: 1rem !important; color: var(--text-secondary); }
+.percent-input-wrapper { position: relative; display: flex; align-items: center; }
+.form-input {
+  width: 100%;
+  padding: 10px 36px 10px 12px;
+  background: #ffffff;
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+.form-input:focus { outline: none; border-color: var(--accent-primary, #667eea); }
+.percent-symbol {
+  position: absolute; right: 12px;
+  color: var(--text-secondary); font-weight: 600; font-size: 0.9rem;
+}
+.form-hint { font-size: 0.75rem; color: var(--text-secondary); margin: 0; }
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.form-textarea:focus { outline: none; border-color: var(--accent-primary, #667eea); }
+
+/* Modal Footer */
+.modal-footer {
+  display: flex; gap: 12px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-top: 1px solid var(--border-primary);
+}
+.btn-cancel-modal {
+  flex: 1; padding: 10px;
+  background: #f8fafc; border: 1px solid var(--border-primary);
+  border-radius: 8px; color: var(--text-primary); cursor: pointer; font-size: 0.9rem;
+  transition: background 0.2s;
+}
+.btn-cancel-modal:hover { background: #eef2f7; }
+.btn-submit-modal {
+  flex: 2; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px; border: none; border-radius: 8px; cursor: pointer;
+  font-size: 0.9rem; font-weight: 600; color: white;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  transition: opacity 0.2s;
+}
+.btn-submit-modal:hover { opacity: 0.9; }
+.btn-submit-modal:disabled, .btn-cancel-modal:disabled { opacity: 0.6; cursor: not-allowed; }
+.spinner-small {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white; border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .request-commission-wrapper { padding: 16px; }
+  .students-grid { grid-template-columns: 1fr; }
+  .modal-fee-grid { grid-template-columns: 1fr; }
+  .page-header { flex-direction: column; }
+}
+
+:host-context([data-theme="dark"]) .modal-card {
+  background-color: #17171c;
+  border-color: rgba(129, 140, 248, 0.18);
+}
+
+:host-context([data-theme="dark"]) .modal-header {
+  background: #1d1d24;
+  border-bottom-color: rgba(148, 163, 184, 0.16);
+}
+
+:host-context([data-theme="dark"]) .modal-body,
+:host-context([data-theme="dark"]) .modal-footer {
+  background: #17171c;
+}
+
+:host-context([data-theme="dark"]) .modal-student-summary,
+:host-context([data-theme="dark"]) .fee-grid-item,
+:host-context([data-theme="dark"]) .btn-cancel-modal {
+  background: #23232b;
+}
+
+:host-context([data-theme="dark"]) .form-input,
+:host-context([data-theme="dark"]) .form-textarea {
+  background: #111118;
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+:host-context([data-theme="dark"]) .btn-cancel-modal:hover {
+  background: #2b2b35;
+}

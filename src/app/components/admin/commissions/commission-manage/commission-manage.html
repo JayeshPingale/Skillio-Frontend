@@ -1,0 +1,318 @@
+<div class="commission-manage-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">account_balance_wallet</span>
+        {{ isEditMode() ? 'Edit Commission' : 'Create New Commission' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ isEditMode() ? 'Update commission details' : 'Create a new commission record for enrollment' }}
+      </p>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-icons btn-icon">arrow_back</span>
+        Back to List
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading data...</p>
+  </div>
+
+  <!-- Form Card -->
+  <div *ngIf="!isLoading()" class="form-card">
+    
+    <!-- ✅ UPDATED: Selected Enrollment Info Card -->
+    <div *ngIf="selectedEnrollment() && !isEditMode()" class="info-card">
+      <div class="info-header">
+        <span class="material-icons info-icon">school</span>
+        <span class="info-title">Selected Enrollment Details</span>
+      </div>
+      <div class="info-content">
+        <div class="info-item">
+          <span class="info-label">Student:</span>
+          <span class="info-value">{{ selectedEnrollment()?.studentName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Course:</span>
+          <span class="info-value">{{ selectedEnrollment()?.courseName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Batch:</span>
+          <span class="info-value">{{ selectedEnrollment()?.batchName }}</span>
+        </div>
+        
+        <!-- ✅ Show Original Fee -->
+        <div class="info-item">
+          <span class="info-label">Original Fee:</span>
+          <span class="info-value">₹{{ selectedEnrollment()?.totalCourseFees | number }}</span>
+        </div>
+        
+        <!-- ✅ Show Discount if exists -->
+        <div class="info-item" *ngIf="calculatedDiscountAmount() > 0">
+          <span class="info-label">Discount Applied:</span>
+          <span class="info-value discount-text">
+            - ₹{{ calculatedDiscountAmount() | number }}
+            <span class="discount-badge" *ngIf="selectedEnrollment()?.discountPercentage">
+              ({{ selectedEnrollment()?.discountPercentage }}%)
+            </span>
+          </span>
+        </div>
+        
+        <!-- ✅ Show Final Fee (after discount) -->
+        <div class="info-item">
+          <span class="info-label">Final Fee:</span>
+          <span class="info-value fee-highlight">
+            ₹{{ (selectedEnrollment()!.totalCourseFees - calculatedDiscountAmount()) | number }}
+          </span>
+        </div>
+        
+        <div class="info-item">
+          <span class="info-label">Enrollment Date:</span>
+          <span class="info-value">{{ selectedEnrollment()?.enrollmentDate | date: 'dd MMM yyyy' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="commissionForm" (ngSubmit)="onSubmit()">
+      
+      <!-- Enrollment & Sales Executive Selection -->
+      <div class="form-row">
+        <!-- Enrollment Selection (Create mode only) -->
+        <div class="form-group" *ngIf="!isEditMode()">
+          <label class="form-label">
+            <span class="material-icons label-icon">school</span>
+            Select Enrollment
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">search</span>
+            <select 
+              formControlName="enrollmentId" 
+              class="form-select"
+              [class.input-error]="commissionForm.get('enrollmentId')?.invalid && commissionForm.get('enrollmentId')?.touched"
+            >
+              <option value="">-- Select enrollment --</option>
+        <option *ngFor="let enrollment of filteredEnrollments()" [value]="enrollment.enrollmentId">
+            </select>
+          </div>
+          <span 
+            class="error-message" 
+            *ngIf="commissionForm.get('enrollmentId')?.invalid && commissionForm.get('enrollmentId')?.touched"
+          >
+            <span class="material-icons error-icon-small">error</span>
+            Please select an enrollment
+          </span>
+        </div>
+
+        <!-- Sales Executive Selection (Create mode only) -->
+        <div class="form-group" *ngIf="!isEditMode()">
+          <label class="form-label">
+            <span class="material-icons label-icon">badge</span>
+            Select Sales Executive
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">person</span>
+            <select 
+              formControlName="salesExecutiveId" 
+              class="form-select"
+              [class.input-error]="commissionForm.get('salesExecutiveId')?.invalid && commissionForm.get('salesExecutiveId')?.touched"
+            >
+              <option value="">-- Select sales executive --</option>
+              <option *ngFor="let user of salesExecutives()" [value]="user.userId">
+                {{ user.fullName }} - {{ user.email }}
+              </option>
+            </select>
+          </div>
+          <span 
+            class="error-message" 
+            *ngIf="commissionForm.get('salesExecutiveId')?.invalid && commissionForm.get('salesExecutiveId')?.touched"
+          >
+            <span class="material-icons error-icon-small">error</span>
+            Please select a sales executive
+          </span>
+        </div>
+      </div>
+
+      <!-- ✅ Total Course Fees & Discount Amount -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">account_balance</span>
+            Total Course Fees
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">currency_rupee</span>
+            <input
+              type="number"
+              formControlName="totalCourseFees"
+              class="form-input"
+              placeholder="Enter total course fees"
+              min="0.01"
+              step="0.01"
+              readonly
+              style="background: var(--bg-hover); cursor: not-allowed;"
+              [class.input-error]="commissionForm.get('totalCourseFees')?.invalid && commissionForm.get('totalCourseFees')?.touched"
+            />
+          </div>
+          <span class="help-text">
+            <span class="material-icons" style="font-size: 14px; vertical-align: middle;">info</span>
+            Auto-populated from selected enrollment
+          </span>
+        </div>
+
+        <!-- ✅ READ-ONLY: Discount Amount Field -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">local_offer</span>
+            Discount Amount
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">trending_down</span>
+            <input
+              type="number"
+              formControlName="discountAmount"
+              class="form-input"
+              placeholder="Auto-populated from enrollment"
+              readonly
+              style="background: var(--bg-hover); cursor: not-allowed;"
+            />
+          </div>
+          <span class="help-text">
+            <span class="material-icons" style="font-size: 14px; vertical-align: middle;">info</span>
+            Discount is automatically fetched from Enrollment
+          </span>
+        </div>
+      </div>
+
+      <!-- Commission Percentage -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">percent</span>
+          Commission Percentage
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">tag</span>
+          <input
+            type="number"
+            formControlName="commissionPercentage"
+            class="form-input"
+            placeholder="Default: 10%"
+            min="0"
+            max="100"
+            step="0.01"
+            [class.input-error]="commissionForm.get('commissionPercentage')?.invalid && commissionForm.get('commissionPercentage')?.touched"
+          />
+          <span class="input-suffix">%</span>
+        </div>
+        <span class="help-text">Default is 10% if not specified</span>
+        <span 
+          class="error-message" 
+          *ngIf="commissionForm.get('commissionPercentage')?.errors?.['min']"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Commission percentage cannot be negative
+        </span>
+        <span 
+          class="error-message" 
+          *ngIf="commissionForm.get('commissionPercentage')?.errors?.['max']"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Commission percentage cannot exceed 100
+        </span>
+      </div>
+
+      <!-- ✅ UPDATED: Commission Calculation Breakdown -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">calculate</span>
+          Commission Calculation
+        </label>
+        
+        <div class="calculation-breakdown">
+          <div class="calc-row">
+            <span class="calc-label">Original Course Fees:</span>
+            <span class="calc-value">₹{{ commissionForm.get('totalCourseFees')?.value | number:'1.2-2' }}</span>
+          </div>
+          
+          <div class="calc-row discount" *ngIf="calculatedDiscountAmount() > 0">
+            <span class="calc-label">Discount Applied:</span>
+            <span class="calc-value discount-value">- ₹{{ calculatedDiscountAmount() | number:'1.2-2' }}</span>
+          </div>
+          
+          <div class="calc-row divider">
+            <span class="calc-label">Final Amount:</span>
+            <span class="calc-value final">₹{{ discountedAmount | number:'1.2-2' }}</span>
+          </div>
+          
+          <div class="calc-row highlight">
+            <span class="calc-label">Commission ({{ commissionForm.get('commissionPercentage')?.value }}%):</span>
+            <span class="calc-value commission">₹{{ calculatedEligibleAmount | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">comment</span>
+          Remarks
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon textarea-icon">notes</span>
+          <textarea
+            formControlName="remarks"
+            class="form-textarea"
+            placeholder="Add any remarks or notes (optional)"
+            rows="4"
+            [class.input-error]="commissionForm.get('remarks')?.invalid && commissionForm.get('remarks')?.touched"
+          ></textarea>
+        </div>
+        <div class="char-count">
+          {{ commissionForm.get('remarks')?.value?.length || 0 }} / 500 characters
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn-cancel" 
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-icons btn-icon">close</span>
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn-submit"
+          [disabled]="isSubmitting() || commissionForm.invalid"
+        >
+          <span class="material-icons btn-icon" *ngIf="!isSubmitting()">save</span>
+          <span class="spinner-small" *ngIf="isSubmitting()"></span>
+          {{ isSubmitting() ? (isEditMode() ? 'Updating...' : 'Creating...') : (isEditMode() ? 'Update Commission' : 'Create Commission') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,148 @@
+<div class="history-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1 class="page-title">
+          <span class="material-icons title-icon">history</span>
+          Lead Status History
+        </h1>
+        <p class="page-description">
+          {{ viewMode() === 'by-lead' ? 'Track status changes for this lead' : 'View all status change records and audit trail' }}
+        </p>
+      </div>
+
+      <!-- View Mode Toggles -->
+      <div class="view-modes" *ngIf="viewMode() === 'all'">
+        <button class="btn-secondary" (click)="loadMyHistory()">
+          <span class="material-icons">person</span>
+          <span>My Changes</span>
+        </button>
+        <button class="btn-secondary" (click)="loadAllHistory()">
+          <span class="material-icons">refresh</span>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by lead name, user, status or remarks..."
+        [value]="searchTerm()"
+        (input)="onSearchChange($event)"
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-dropdown">
+      <span class="material-icons">filter_list</span>
+      <select 
+        class="status-filter" 
+        [value]="filterStatus()"
+        (change)="onFilterChange($any($event.target).value)"
+      >
+        <option value="all">All Statuses</option>
+        <option *ngFor="let status of uniqueStatuses" [value]="status">
+          {{ status.replace('_', ' ') }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+<div class="stats-row">
+  <div class="stat-card">
+    <span class="material-icons stat-icon">timeline</span>
+    <div class="stat-content">
+      <p class="stat-label">Total Changes</p>
+      <h3 class="stat-value">{{ filteredHistory().length }}</h3>
+    </div>
+  </div>
+  <div class="stat-card">
+    <span class="material-icons stat-icon">people</span>
+    <div class="stat-content">
+      <p class="stat-label">Unique Leads</p>
+      <h3 class="stat-value">{{ getUniqueLeadsCount() }}</h3>
+    </div>
+  </div>
+  <div class="stat-card">
+    <span class="material-icons stat-icon">person</span>
+    <div class="stat-content">
+      <p class="stat-label">Users Involved</p>
+      <h3 class="stat-value">{{ getUniqueUsersCount() }}</h3>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading history...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading() && filteredHistory().length === 0" class="empty-state">
+    <span class="material-icons empty-icon">history</span>
+    <h3>No history records found</h3>
+    <p>{{ searchTerm() ? 'Try adjusting your search or filters' : 'No status changes have been recorded yet' }}</p>
+  </div>
+
+  <!-- History Timeline -->
+  <div *ngIf="!isLoading() && filteredHistory().length > 0" class="history-timeline">
+    <div *ngFor="let record of filteredHistory(); let i = index" class="timeline-item">
+      <!-- Timeline Connector -->
+      <div class="timeline-connector">
+        <div class="timeline-dot"></div>
+        <div class="timeline-line" *ngIf="i < filteredHistory().length - 1"></div>
+      </div>
+
+      <!-- History Card -->
+      <div class="history-card">
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="lead-info">
+            <span class="material-icons lead-icon">person</span>
+            <div>
+              <h4 class="lead-name">{{ record.leadName }}</h4>
+              <p class="lead-id">Lead #{{ record.leadId }}</p>
+            </div>
+          </div>
+          <div class="time-info">
+            <span class="time-ago">{{ getTimeAgo(record.changedAt) }}</span>
+            <span class="timestamp">{{ formatDateTime(record.changedAt) }}</span>
+          </div>
+        </div>
+
+        <!-- Status Change -->
+        <div class="status-change">
+          <div class="status-badge" [ngClass]="getStatusColor(record.oldStatus)">
+            {{ record.oldStatus.replace('_', ' ') }}
+          </div>
+          <span class="material-icons arrow-icon">arrow_forward</span>
+          <div class="status-badge" [ngClass]="getStatusColor(record.newStatus)">
+            {{ record.newStatus.replace('_', ' ') }}
+          </div>
+        </div>
+
+        <!-- Remarks -->
+        <div class="remarks-section">
+          <span class="material-icons remarks-icon">chat_bubble_outline</span>
+          <p class="remarks-text">{{ record.remarks }}</p>
+        </div>
+
+        <!-- Changed By -->
+        <div class="changed-by">
+          <span class="material-icons user-icon">account_circle</span>
+          <span class="user-name">{{ record.changedByUserName }}</span>
+          <span class="user-id">(User #{{ record.changedByUserId }})</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

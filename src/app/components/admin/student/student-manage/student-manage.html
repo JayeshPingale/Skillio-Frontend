@@ -1,0 +1,334 @@
+<div class="student-manage-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">
+          {{ isEditMode() ? 'edit_note' : 'person_add' }}
+        </span>
+        {{ isEditMode() ? 'Edit Student' : 'Add New Student' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ isEditMode() ? 'Update student information' : 'Register a new student' }}
+      </p>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-icons btn-icon">arrow_back</span>
+        Back to List
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading student details...</p>
+  </div>
+
+  <!-- Form Card -->
+  <div *ngIf="!isLoading()" class="form-card">
+
+    <!-- Student Info Card (Only in Edit Mode) -->
+    <div *ngIf="isEditMode() && currentStudent()" class="info-card">
+      <div class="info-header">
+        <span class="material-icons info-icon">person</span>
+        <span class="info-title">Student Information</span>
+      </div>
+      <div class="info-content">
+        <div class="info-item">
+          <span class="info-label">Student ID:</span>
+          <span class="info-value">#{{ currentStudent()?.studentId }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Current Age:</span>
+          <span class="info-value">
+            {{ calculateAge(currentStudent()?.dateOfBirth) }} years
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Registered On:</span>
+          <span class="info-value">
+            {{ currentStudent()?.createdAt | date : 'dd MMM yyyy' }}
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Last Updated:</span>
+          <span class="info-value">
+            {{ currentStudent()?.updatedAt | date : 'dd MMM yyyy, hh:mm a' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="studentForm" (ngSubmit)="onSubmit()">
+
+      <!-- Full Name -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">person</span>
+          Full Name
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">badge</span>
+          <input
+            type="text"
+            formControlName="fullName"
+            class="form-input"
+            placeholder="Enter full name"
+            [class.input-error]="
+              studentForm.get('fullName')?.invalid &&
+              studentForm.get('fullName')?.touched
+            "
+          />
+        </div>
+        <span
+          class="error-message"
+          *ngIf="studentForm.get('fullName')?.invalid && studentForm.get('fullName')?.touched"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          <span *ngIf="studentForm.get('fullName')?.errors?.['required']">
+            Full name is required
+          </span>
+          <span *ngIf="studentForm.get('fullName')?.errors?.['minlength']">
+            Name must be at least 3 characters
+          </span>
+          <span *ngIf="studentForm.get('fullName')?.errors?.['maxlength']">
+            Name cannot exceed 100 characters
+          </span>
+        </span>
+      </div>
+
+      <!-- Email: full row -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">email</span>
+          Email Address
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">alternate_email</span>
+          <input
+            type="email"
+            formControlName="email"
+            class="form-input"
+            placeholder="student@example.com"
+            [class.input-error]="
+              studentForm.get('email')?.invalid &&
+              studentForm.get('email')?.touched
+            "
+          />
+        </div>
+        <span
+          class="error-message"
+          *ngIf="studentForm.get('email')?.invalid && studentForm.get('email')?.touched"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          <span *ngIf="studentForm.get('email')?.errors?.['required']">
+            Email is required
+          </span>
+          <span *ngIf="studentForm.get('email')?.errors?.['email']">
+            Invalid email format
+          </span>
+        </span>
+      </div>
+
+      <!-- Phone + Alternate Contact: side by side -->
+      <div class="form-row">
+        <!-- Phone -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">phone</span>
+            Phone Number
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">smartphone</span>
+            <input
+              type="tel"
+              formControlName="contactNumber"
+              class="form-input"
+              placeholder="9876543210"
+              maxlength="10"
+              [class.input-error]="
+                studentForm.get('contactNumber')?.invalid &&
+                studentForm.get('contactNumber')?.touched
+              "
+            />
+          </div>
+          <span
+            class="error-message"
+            *ngIf="
+              studentForm.get('contactNumber')?.invalid &&
+              studentForm.get('contactNumber')?.touched
+            "
+          >
+            <span class="material-icons error-icon-small">error</span>
+            <span *ngIf="studentForm.get('contactNumber')?.errors?.['required']">
+              Phone is required
+            </span>
+            <span *ngIf="studentForm.get('contactNumber')?.errors?.['pattern']">
+              Phone must be 10 digits
+            </span>
+          </span>
+        </div>
+
+        <!-- Alternate Contact -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">phone_callback</span>
+            Alternate Contact
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">phone_iphone</span>
+            <input
+              type="tel"
+              formControlName="alternateContact"
+              class="form-input"
+              placeholder="Parent/Guardian number"
+              maxlength="10"
+              [class.input-error]="
+                studentForm.get('alternateContact')?.invalid &&
+                studentForm.get('alternateContact')?.touched
+              "
+            />
+          </div>
+          <span
+            class="error-message"
+            *ngIf="
+              studentForm.get('alternateContact')?.invalid &&
+              studentForm.get('alternateContact')?.touched
+            "
+          >
+            <span class="material-icons error-icon-small">error</span>
+            <span *ngIf="studentForm.get('alternateContact')?.errors?.['required']">
+              Alternate contact is required
+            </span>
+            <span *ngIf="studentForm.get('alternateContact')?.errors?.['pattern']">
+              Alternate contact must be 10 digits
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Date of Birth -->
+      <div class="form-group">
+  <label class="form-label">
+    <span class="material-icons label-icon">cake</span>
+    Date of Birth
+    <span class="required">*</span>
+  </label>
+  <div class="input-wrapper">
+    <span class="material-icons input-icon">calendar_today</span>
+    <input
+      type="date"
+      formControlName="dateOfBirth"
+      class="form-input"
+      [attr.min]="minDob"
+      [attr.max]="maxDob"
+      [class.input-error]="
+        studentForm.get('dateOfBirth')?.invalid &&
+        studentForm.get('dateOfBirth')?.touched
+      "
+    />
+  </div>
+  <span
+    class="error-message"
+    *ngIf="
+      studentForm.get('dateOfBirth')?.invalid &&
+      studentForm.get('dateOfBirth')?.touched
+    "
+  >
+    <span class="material-icons error-icon-small">error</span>
+    <span *ngIf="studentForm.get('dateOfBirth')?.errors?.['required']">
+      Date of birth is required
+    </span>
+    <span *ngIf="studentForm.get('dateOfBirth')?.errors?.['ageRange']">
+      Age must be between 15 and 70 years
+    </span>
+  </span>
+</div>
+
+
+      <!-- Address -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">location_on</span>
+          Address
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon textarea-icon">home</span>
+          <textarea
+            formControlName="address"
+            class="form-textarea"
+            placeholder="Enter complete address (min 10 characters)"
+            rows="4"
+            [class.input-error]="
+              studentForm.get('address')?.invalid &&
+              studentForm.get('address')?.touched
+            "
+          ></textarea>
+        </div>
+        <div class="char-count">
+          {{ studentForm.get('address')?.value?.length || 0 }} / 500 characters
+        </div>
+        <span
+          class="error-message"
+          *ngIf="studentForm.get('address')?.invalid && studentForm.get('address')?.touched"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          <span *ngIf="studentForm.get('address')?.errors?.['required']">
+            Address is required
+          </span>
+          <span *ngIf="studentForm.get('address')?.errors?.['minlength']">
+            Address must be at least 10 characters
+          </span>
+          <span *ngIf="studentForm.get('address')?.errors?.['maxlength']">
+            Address cannot exceed 500 characters
+          </span>
+        </span>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-icons btn-icon">close</span>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="isSubmitting() || studentForm.invalid"
+        >
+          <span class="material-icons btn-icon" *ngIf="!isSubmitting()">save</span>
+          <span class="spinner-small" *ngIf="isSubmitting()"></span>
+          {{
+            isSubmitting()
+              ? (isEditMode() ? 'Updating...' : 'Creating...')
+              : (isEditMode() ? 'Update Student' : 'Create Student')
+          }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,247 @@
+<div class="request-commission-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">request_quote</span>
+        Request Commission
+      </h1>
+      <p class="page-subtitle">Select an enrollment to submit a commission request for admin approval</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-my-commissions" (click)="navigateToMyCommissions()">
+        <span class="material-icons">account_balance_wallet</span>
+        My Commissions
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons">check_circle</span> {{ successMessage() }}
+  </div>
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons">error</span> {{ errorMessage() }}
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by student name, course, or student code..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+    <div class="result-count">
+      <span class="material-icons">group</span>
+      {{ filteredStudents().length }} enrollment(s) found
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p>Loading your enrolled students...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading() && filteredStudents().length === 0" class="empty-state">
+    <span class="material-icons empty-icon">person_search</span>
+    <h3>No Enrollments Found</h3>
+    <p>You don't have any enrolled students yet, or all commissions have been requested.</p>
+  </div>
+
+  <!-- Student Cards Grid -->
+  <div *ngIf="!isLoading() && filteredStudents().length > 0" class="students-grid">
+    <div *ngFor="let student of filteredStudents()" class="student-card"
+         [class.already-requested]="!!student.commissionStatus">
+
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="student-avatar">
+          {{ student.studentName.charAt(0).toUpperCase() }}
+        </div>
+        <div class="student-info">
+          <h3 class="student-name">{{ student.studentName }}</h3>
+          <span class="student-code">{{ student.studentCode }}</span>
+        </div>
+        <!-- Commission Status Badge (if already requested) -->
+        <span *ngIf="student.commissionStatus"
+              class="commission-status-badge"
+              [ngClass]="getCommissionStatusClass(student.commissionStatus)">
+          <span class="material-icons">
+            {{ student.commissionStatus === 'PAID' ? 'check_circle' :
+               student.commissionStatus === 'REJECTED' ? 'cancel' :
+               student.commissionStatus === 'ELIGIBLE' ? 'verified' : 'hourglass_top' }}
+          </span>
+          {{ student.commissionStatus }}
+        </span>
+      </div>
+
+      <!-- Course Info -->
+      <div class="course-info">
+        <span class="material-icons course-icon">book</span>
+        <span class="course-name">{{ student.courseName }}</span>
+      </div>
+
+      <!-- Fee Details -->
+      <div class="fee-details">
+        <div class="fee-row">
+          <span class="fee-label">Total Fees</span>
+          <span class="fee-value total">₹{{ student.totalCourseFee | number:'1.0-0' }}</span>
+        </div>
+        <div class="fee-row">
+          <span class="fee-label">Paid</span>
+          <span class="fee-value paid">₹{{ student.totalFeesPaid | number:'1.0-0' }}</span>
+        </div>
+        <div class="fee-row">
+          <span class="fee-label">Pending</span>
+          <span class="fee-value pending">₹{{ student.totalFeesPending | number:'1.0-0' }}</span>
+        </div>
+      </div>
+
+      <!-- Payment Progress Bar -->
+      <div class="progress-section">
+        <div class="progress-label">
+          <span>Payment Progress</span>
+          <span class="progress-percent">{{ getPaymentProgress(student) }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="getPaymentProgress(student)"></div>
+        </div>
+      </div>
+
+      <!-- Eligible Amount Preview (if already requested) -->
+      <div *ngIf="student.eligibleAmount" class="eligible-amount-row">
+        <span class="material-icons">currency_rupee</span>
+        Commission: ₹{{ student.eligibleAmount | number:'1.2-2' }}
+      </div>
+
+      <!-- Admin Remarks (if rejected) -->
+      <div *ngIf="student.commissionStatus === 'REJECTED' && student.adminComments" class="rejection-note">
+        <span class="material-icons">info</span>
+        {{ student.adminComments }}
+      </div>
+
+      <!-- Action Button -->
+      <div class="card-footer">
+        <button
+          *ngIf="!student.commissionStatus || student.commissionStatus === 'REJECTED'"
+          class="btn-request"
+          (click)="openRequestModal(student)">
+          <span class="material-icons">add_task</span>
+          {{ student.commissionStatus === 'REJECTED' ? 'Re-Request Commission' : 'Request Commission' }}
+        </button>
+        <div *ngIf="student.commissionStatus && student.commissionStatus !== 'REJECTED'"
+             class="already-requested-label">
+          <span class="material-icons">done_all</span>
+          Commission Already Requested
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== REQUEST MODAL ==================== -->
+  <div *ngIf="showModal()" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <h2>
+          <span class="material-icons">request_quote</span>
+          Request Commission
+        </h2>
+        <button class="modal-close" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedStudent() as s">
+
+        <!-- Student Info Summary -->
+        <div class="modal-student-summary">
+          <div class="summary-avatar">{{ s.studentName.charAt(0).toUpperCase() }}</div>
+          <div>
+            <div class="summary-name">{{ s.studentName }}</div>
+            <div class="summary-course">{{ s.courseName }}</div>
+          </div>
+        </div>
+
+        <!-- Fee Summary -->
+        <div class="modal-fee-grid">
+          <div class="fee-grid-item">
+            <span class="fee-grid-label">Total Course Fee</span>
+            <span class="fee-grid-value">₹{{ s.totalCourseFee | number:'1.0-0' }}</span>
+          </div>
+          <div class="fee-grid-item">
+            <span class="fee-grid-label">Fees Paid</span>
+            <span class="fee-grid-value paid-color">₹{{ s.totalFeesPaid | number:'1.0-0' }}</span>
+          </div>
+          <div class="fee-grid-item">
+            <span class="fee-grid-label">Fees Pending</span>
+            <span class="fee-grid-value pending-color">₹{{ s.totalFeesPending | number:'1.0-0' }}</span>
+          </div>
+          <div class="fee-grid-item highlight-box">
+            <span class="fee-grid-label">Eligible Amount Preview</span>
+            <span class="fee-grid-value highlight-color">₹{{ eligibleAmountPreview() | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <!-- Commission % Input -->
+        <div class="form-field">
+          <label class="form-label">
+            <span class="material-icons">percent</span>
+            Commission Percentage
+          </label>
+          <div class="percent-input-wrapper">
+            <input
+              type="number"
+              class="form-input"
+              min="1"
+              max="100"
+              [value]="commissionPercentage()"
+              (input)="commissionPercentage.set(+$any($event.target).value)"
+              placeholder="e.g. 10"
+            />
+            <span class="percent-symbol">%</span>
+          </div>
+          <p class="form-hint">Enter percentage between 1% and 100%</p>
+        </div>
+
+        <!-- Remarks Input -->
+        <div class="form-field">
+          <label class="form-label">
+            <span class="material-icons">comment</span>
+            Remarks (Optional)
+          </label>
+          <textarea
+            class="form-textarea"
+            rows="3"
+            placeholder="Any additional notes for the admin..."
+            [value]="requestRemarks()"
+            (input)="requestRemarks.set($any($event.target).value)">
+          </textarea>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel-modal" (click)="closeModal()" [disabled]="isSubmitting()">
+          Cancel
+        </button>
+        <button class="btn-submit-modal" (click)="submitRequest()" [disabled]="isSubmitting()">
+          <span class="spinner-small" *ngIf="isSubmitting()"></span>
+          <span class="material-icons" *ngIf="!isSubmitting()">send</span>
+          {{ isSubmitting() ? 'Submitting...' : 'Submit Request' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

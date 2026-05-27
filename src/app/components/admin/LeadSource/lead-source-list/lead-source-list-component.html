@@ -1,0 +1,132 @@
+<div class="lead-source-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1 class="page-title">
+          <span class="material-icons title-icon">source</span>
+          Lead Sources
+        </h1>
+        <p class="page-description">Manage lead acquisition channels and sources</p>
+      </div>
+      <button class="btn-primary" routerLink="/admin-dashboard/lead-sources/create">
+        <span class="material-icons">add</span>
+        <span>Add Source</span>
+      </button>
+    </div>
+  </div>
+<!-- Filters -->
+<div class="filters-section">
+  <div class="search-box">
+    <span class="material-icons search-icon">search</span>
+    <input
+      type="text"
+      placeholder="Search by name, channel or description..."
+      [value]="searchTerm()"
+      (input)="onSearchChange($event)"
+      class="search-input"
+    />
+  </div>
+
+  <div class="filter-tabs">
+    <button
+      class="filter-tab"
+      [class.active]="filterStatus() === 'all'"
+      (click)="onFilterChange('all')"
+    >
+      All ({{ leadSources().length }})
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="filterStatus() === 'active'"
+      (click)="onFilterChange('active')"
+    >
+      Active ({{ getActiveCount() }})
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="filterStatus() === 'inactive'"
+      (click)="onFilterChange('inactive')"
+    >
+      Inactive ({{ getInactiveCount() }})
+    </button>
+  </div>
+</div>
+
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading lead sources...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading() && filteredLeadSources().length === 0" class="empty-state">
+    <span class="material-icons empty-icon">inbox</span>
+    <h3>No lead sources found</h3>
+    <p>{{ searchTerm() ? 'Try adjusting your search or filters' : 'Create your first lead source to get started' }}</p>
+  </div>
+
+  <!-- Lead Sources Grid -->
+  <div *ngIf="!isLoading() && filteredLeadSources().length > 0" class="sources-grid">
+    <div *ngFor="let source of filteredLeadSources()" class="source-card">
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="source-info">
+          <h3 class="source-name">{{ source.name }}</h3>
+          <span class="badge" [ngClass]="getChannelBadgeClass(source.channel)">
+            {{ source.channel.replace('_', ' ') }}
+          </span>
+        </div>
+        <div class="card-actions">
+          <button
+            class="icon-btn"
+            [routerLink]="['/admin-dashboard/lead-sources/edit', source.sourceId]"
+            title="Edit"
+          >
+            <span class="material-icons">edit</span>
+          </button>
+          <button
+            class="icon-btn"
+            (click)="toggleStatus(source)"
+            [title]="source.isActive ? 'Deactivate' : 'Activate'"
+          >
+            <span class="material-icons">{{ source.isActive ? 'toggle_on' : 'toggle_off' }}</span>
+          </button>
+          <button
+            class="icon-btn delete-btn"
+            (click)="deleteLeadSource(source)"
+            title="Delete"
+          >
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <p class="source-description">{{ source.description }}</p>
+        
+        <div class="source-meta">
+          <div class="meta-item">
+            <span class="material-icons meta-icon">event</span>
+            <span class="meta-text">Created: {{ formatDate(source.createdAt) }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="material-icons meta-icon">update</span>
+            <span class="meta-text">Updated: {{ formatDate(source.updatedAt) }}</span>
+          </div>
+        </div>
+
+        <div class="source-status">
+          <span class="status-badge" [class.active]="source.isActive" [class.inactive]="!source.isActive">
+            <span class="material-icons status-icon">
+              {{ source.isActive ? 'check_circle' : 'cancel' }}
+            </span>
+            {{ source.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

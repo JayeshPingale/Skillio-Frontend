@@ -1,0 +1,257 @@
+<div class="commission-payment-manage-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="page-title">
+          <span class="material-icons title-icon">payments</span>
+          {{ isEditMode() ? 'Edit Commission Payment' : 'Create Commission Payment' }}
+        </h1>
+        <p class="page-subtitle">
+          {{ isEditMode() ? 'Update commission payment details' : 'Record a new commission payment' }}
+        </p>
+      </div>
+      <div class="header-right">
+        <button class="btn-back" (click)="cancel()">
+          <span class="material-icons">arrow_back</span>
+          Back to List
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="alert-container">
+    <div class="success-alert">
+      <span class="material-icons success-icon">check_circle</span>
+      <span>{{ successMessage() }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage()" class="alert-container">
+    <div class="error-alert">
+      <span class="material-icons error-icon">error</span>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading data...</p>
+  </div>
+
+  <!-- Form Container -->
+  <div *ngIf="!isLoading()" class="form-container">
+    
+    <!-- Form -->
+    <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
+      
+      <!-- Commission Selection -->
+      <div class="form-group" *ngIf="!isEditMode()">
+        <label class="form-label">
+          <span class="material-icons label-icon">receipt_long</span>
+          Select Commission
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">search</span>
+          <select 
+            formControlName="commissionId" 
+            class="form-select"
+            [class.input-error]="paymentForm.get('commissionId')?.invalid && paymentForm.get('commissionId')?.touched"
+          >
+            <option value="">-- Select eligible commission --</option>
+            <option *ngFor="let commission of eligibleCommissions()" [value]="commission.commissionId">
+              #{{ commission.commissionId }} - {{ commission.studentName }} - {{ commission.courseName }} - ₹{{ commission.eligibleAmount | number:'1.2-2' }}
+            </option>
+          </select>
+        </div>
+        <span 
+          class="error-message" 
+          *ngIf="paymentForm.get('commissionId')?.invalid && paymentForm.get('commissionId')?.touched"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Please select a commission
+        </span>
+      </div>
+
+      <!-- Amount to Pay -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">currency_rupee</span>
+          Amount to Pay
+        </label>
+        <div class="amount-display">
+          <span class="amount-label">Payment Amount:</span>
+          <span class="amount-value">₹{{ paymentForm.get('amountPaid')?.value | number:'1.2-2' }}</span>
+        </div>
+        <span class="help-text">This amount is auto-populated from the eligible commission amount</span>
+      </div>
+
+      <!-- Payment Date -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">event</span>
+          Payment Date
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">calendar_today</span>
+          <input
+            type="date"
+            formControlName="paymentDate"
+            class="form-input"
+            [class.input-error]="paymentForm.get('paymentDate')?.invalid && paymentForm.get('paymentDate')?.touched"
+          />
+        </div>
+        <span 
+          class="error-message" 
+          *ngIf="paymentForm.get('paymentDate')?.invalid && paymentForm.get('paymentDate')?.touched"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Payment date is required
+        </span>
+      </div>
+
+      <!-- Payment Mode -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">payment</span>
+          Payment Mode
+          <span class="required">*</span>
+        </label>
+        
+        <div class="payment-mode-grid">
+          <!-- Bank Transfer -->
+          <label class="payment-mode-card">
+            <input 
+              type="radio" 
+              name="paymentMode" 
+              value="BANK_TRANSFER" 
+              formControlName="paymentMode"
+              class="payment-mode-radio"
+            />
+            <div class="payment-mode-content">
+              <span class="material-icons payment-mode-icon icon-bank">account_balance</span>
+              <span class="payment-mode-label">BANK TRANSFER</span>
+            </div>
+          </label>
+
+          <!-- Cash -->
+          <label class="payment-mode-card">
+            <input 
+              type="radio" 
+              name="paymentMode" 
+              value="CASH" 
+              formControlName="paymentMode"
+              class="payment-mode-radio"
+            />
+            <div class="payment-mode-content">
+              <span class="material-icons payment-mode-icon icon-cash">payments</span>
+              <span class="payment-mode-label">CASH</span>
+            </div>
+          </label>
+
+          <!-- Cheque -->
+          <label class="payment-mode-card">
+            <input 
+              type="radio" 
+              name="paymentMode" 
+              value="CHEQUE" 
+              formControlName="paymentMode"
+              class="payment-mode-radio"
+            />
+            <div class="payment-mode-content">
+              <span class="material-icons payment-mode-icon icon-cheque">receipt</span>
+              <span class="payment-mode-label">CHEQUE</span>
+            </div>
+          </label>
+
+          <!-- UPI -->
+          <label class="payment-mode-card">
+            <input 
+              type="radio" 
+              name="paymentMode" 
+              value="UPI" 
+              formControlName="paymentMode"
+              class="payment-mode-radio"
+            />
+            <div class="payment-mode-content">
+              <span class="material-icons payment-mode-icon icon-upi">qr_code_2</span>
+              <span class="payment-mode-label">UPI</span>
+            </div>
+          </label>
+        </div>
+
+        <span 
+          class="error-message" 
+          *ngIf="paymentForm.get('paymentMode')?.invalid && paymentForm.get('paymentMode')?.touched"
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Please select a payment mode
+        </span>
+      </div>
+
+      <!-- Transaction ID -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">tag</span>
+          Transaction ID / Reference Number
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">tag</span>
+          <input
+            type="text"
+            formControlName="transactionId"
+            class="form-input"
+            placeholder="Enter transaction ID or reference number (optional)"
+            maxlength="100"
+          />
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">notes</span>
+          Remarks
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons textarea-icon">notes</span>
+          <textarea
+            formControlName="remarks"
+            class="form-textarea"
+            placeholder="Add any remarks or notes (optional)"
+            rows="4"
+          ></textarea>
+        </div>
+        <div class="char-count">
+          {{ paymentForm.get('remarks')?.value?.length || 0 }} / 500 characters
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn-cancel" 
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-icons">close</span>
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn-submit"
+          [disabled]="isSubmitting() || paymentForm.invalid"
+        >
+          <span class="material-icons" *ngIf="!isSubmitting()">save</span>
+          <span class="spinner-small" *ngIf="isSubmitting()"></span>
+          {{ isSubmitting() ? 'Processing...' : 'Process Payment' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
