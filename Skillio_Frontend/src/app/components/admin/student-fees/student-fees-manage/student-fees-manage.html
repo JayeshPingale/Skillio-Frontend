@@ -1,0 +1,344 @@
+<div class="student-fees-manage-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">
+          {{ isEditMode() ? 'edit_note' : 'account_balance_wallet' }}
+        </span>
+        {{ isEditMode() ? 'Edit Fees Record' : 'Add New Fees Record' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ isEditMode() ? 'Update student fees information' : 'Create a new fees record' }}
+      </p>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-icons btn-icon">arrow_back</span>
+        Back to List
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading fees details...</p>
+  </div>
+
+  <!-- Form Card -->
+  <div *ngIf="!isLoading()" class="form-card">
+    <!-- Fees Info Card (Only in Edit Mode) -->
+    <div *ngIf="isEditMode() && currentFees()" class="info-card">
+      <div class="info-header">
+        <span class="material-icons info-icon">receipt_long</span>
+        <span class="info-title">Fees Information</span>
+      </div>
+      <div class="info-content">
+        <div class="info-item">
+          <span class="info-label">Student:</span>
+          <span class="info-value">{{ currentFees()?.studentName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Course:</span>
+          <span class="info-value">{{ currentFees()?.courseName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Batch:</span>
+          <span class="info-value">{{ currentFees()?.batchName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Created On:</span>
+          <span class="info-value">
+            {{ currentFees()?.createdAt | date: 'dd MMM yyyy, hh:mm a' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="feesForm" (ngSubmit)="onSubmit()">
+      <!-- Enrollment Selection (Only in Create Mode) -->
+      <div class="form-group" *ngIf="!isEditMode()">
+        <label class="form-label">
+          <span class="material-icons label-icon">school</span>
+          Select Enrollment
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">search</span>
+          <select
+            formControlName="enrollmentId"
+            class="form-select"
+            [class.input-error]="
+              feesForm.get('enrollmentId')?.invalid &&
+              feesForm.get('enrollmentId')?.touched
+            "
+          >
+            <option value="">-- Select an enrollment --</option>
+            <option
+              *ngFor="let enrollment of enrollments()"
+              [value]="enrollment.enrollmentId"
+            >
+              {{ enrollment.studentName }} - {{ enrollment.courseName }} ({{
+                enrollment.batchName
+              }})
+            </option>
+          </select>
+        </div>
+        <span
+          class="error-message"
+          *ngIf="
+            feesForm.get('enrollmentId')?.invalid &&
+            feesForm.get('enrollmentId')?.touched
+          "
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Please select an enrollment
+        </span>
+      </div>
+
+      <!-- Two Column Layout -->
+      <div class="form-row">
+        <!-- Total Fees -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">receipt</span>
+            Total Fees
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">currency_rupee</span>
+            <input
+              type="number"
+              formControlName="totalFees"
+              class="form-input"
+              placeholder="Enter total fees"
+              min="0"
+              [class.input-error]="
+                feesForm.get('totalFees')?.invalid &&
+                feesForm.get('totalFees')?.touched
+              "
+            />
+          </div>
+          <span
+            class="error-message"
+            *ngIf="
+              feesForm.get('totalFees')?.invalid &&
+              feesForm.get('totalFees')?.touched
+            "
+          >
+            <span class="material-icons error-icon-small">error</span>
+            Total fees must be 0 or greater
+          </span>
+        </div>
+
+        <!-- Amount Paid -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">payments</span>
+            Amount Paid
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">currency_rupee</span>
+            <input
+              type="number"
+              formControlName="amountPaid"
+              class="form-input"
+              placeholder="Enter amount paid"
+              min="0"
+              [class.input-error]="
+                feesForm.get('amountPaid')?.invalid &&
+                feesForm.get('amountPaid')?.touched
+              "
+            />
+          </div>
+          <span
+            class="error-message"
+            *ngIf="
+              feesForm.get('amountPaid')?.invalid &&
+              feesForm.get('amountPaid')?.touched
+            "
+          >
+            <span class="material-icons error-icon-small">error</span>
+            Amount paid must be 0 or greater
+          </span>
+        </div>
+      </div>
+
+      <!-- Balance & Percentage Info -->
+      <div class="calculation-card">
+        <div class="calc-item">
+          <span class="calc-label">
+            <span class="material-icons calc-icon">account_balance</span>
+            Balance Amount:
+          </span>
+          <span class="calc-value balance-value">
+            ₹{{ calculateBalance() | number }}
+          </span>
+        </div>
+        <div class="calc-item">
+          <span class="calc-label">
+            <span class="material-icons calc-icon">trending_up</span>
+            Payment Progress:
+          </span>
+          <div class="progress-display">
+            <div class="progress-bar-calc">
+              <div
+                class="progress-fill-calc"
+                [style.width.%]="calculatePercentagePaid()"
+                [ngClass]="{
+                  'progress-zero': calculatePercentagePaid() === 0,
+                  'progress-partial':
+                    calculatePercentagePaid() > 0 &&
+                    calculatePercentagePaid() < 100,
+                  'progress-full': calculatePercentagePaid() === 100
+                }"
+              ></div>
+            </div>
+            <span class="progress-text-calc">
+              {{ calculatePercentagePaid() }}%
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Status -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">flag</span>
+          Payment Status
+          <span class="required">*</span>
+        </label>
+        <div class="status-selector">
+          <label
+            *ngFor="let status of paymentStatuses"
+            class="status-option"
+            [class.status-selected]="feesForm.get('paymentStatus')?.value === status"
+          >
+            <input
+              type="radio"
+              formControlName="paymentStatus"
+              [value]="status"
+              class="status-radio"
+            />
+            <div
+              class="status-content"
+              [ngClass]="getPaymentStatusClass(status)"
+            >
+              <span class="material-icons status-icon">
+                {{ getPaymentStatusIcon(status) }}
+              </span>
+              <span class="status-label">{{ status }}</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Due Date -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">event</span>
+          Due Date
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">calendar_today</span>
+          <input
+            type="date"
+            formControlName="dueDate"
+            class="form-input"
+            [class.input-error]="
+              feesForm.get('dueDate')?.invalid &&
+              feesForm.get('dueDate')?.touched
+            "
+          />
+        </div>
+        <span
+          class="error-message"
+          *ngIf="
+            feesForm.get('dueDate')?.invalid &&
+            feesForm.get('dueDate')?.touched
+          "
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Due date is required
+        </span>
+      </div>
+
+      <!-- Remarks -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">comment</span>
+          Remarks
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon textarea-icon">notes</span>
+          <textarea
+            formControlName="remarks"
+            class="form-textarea"
+            placeholder="Add any remarks or notes (optional)"
+            rows="4"
+            [class.input-error]="
+              feesForm.get('remarks')?.invalid &&
+              feesForm.get('remarks')?.touched
+            "
+          ></textarea>
+        </div>
+        <div class="char-count">
+          {{ feesForm.get('remarks')?.value?.length || 0 }} / 500 characters
+        </div>
+        <span
+          class="error-message"
+          *ngIf="
+            feesForm.get('remarks')?.invalid &&
+            feesForm.get('remarks')?.touched
+          "
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Remarks cannot exceed 500 characters
+        </span>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-icons btn-icon">close</span>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="isSubmitting() || feesForm.invalid"
+        >
+          <span class="material-icons btn-icon" *ngIf="!isSubmitting()">
+            save
+          </span>
+          <span class="spinner-small" *ngIf="isSubmitting()"></span>
+          {{
+            isSubmitting()
+              ? (isEditMode() ? 'Updating...' : 'Creating...')
+              : (isEditMode() ? 'Update Fees' : 'Create Fees')
+          }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

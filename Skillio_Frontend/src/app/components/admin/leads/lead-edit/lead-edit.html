@@ -1,0 +1,308 @@
+<div class="lead-edit-wrapper">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-icons">arrow_back</span>
+        Back
+      </button>
+      <div class="header-info">
+        <h1 class="page-title">
+          <span class="material-icons title-icon">edit</span>
+          Edit Lead
+        </h1>
+        <p class="page-subtitle" *ngIf="currentLead()">
+          Update details for {{ currentLead()?.fullName }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons alert-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons alert-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading lead details...</p>
+  </div>
+
+  <!-- Form Card -->
+  <div *ngIf="!isLoading()" class="form-card">
+    <!-- Lead Info Badge -->
+    <div class="lead-info-badge" *ngIf="currentLead()">
+      <div class="lead-avatar">
+        <span class="material-icons avatar-icon">person</span>
+      </div>
+      <div class="lead-details">
+        <h3>{{ currentLead()?.fullName }}</h3>
+        <p>
+          <span class="material-icons inline-icon">tag</span>
+          Lead ID: #{{ currentLead()?.leadId }}
+        </p>
+        <div class="lead-meta">
+          <span class="status-badge" [ngClass]="'status-' + currentLead()?.status?.toLowerCase()">
+            <span class="material-icons status-icon">{{ getStatusIcon(currentLead()?.status || '') }}</span>
+            {{ currentLead()?.status }}
+          </span>
+          <span class="meta-text">
+            <span class="material-icons inline-icon">event</span>
+            Created: {{ currentLead()?.createdDate | date: 'dd MMM yyyy' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="leadForm" (ngSubmit)="onSubmit()">
+      <div class="form-sections">
+        <!-- Personal Information Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <span class="material-icons section-icon">person</span>
+            <h3>Personal Information</h3>
+          </div>
+
+          <div class="form-row">
+            <!-- Full Name -->
+            <div class="form-group">
+              <label for="fullName" class="input-label">
+                <span class="material-icons label-icon">badge</span>
+                Full Name *
+              </label>
+              <input
+                type="text"
+                id="fullName"
+                formControlName="fullName"
+                class="input-field"
+                placeholder="Enter full name"
+                [class.error]="fullName?.invalid && fullName?.touched"
+              />
+              <div class="error-message" *ngIf="fullName?.invalid && fullName?.touched">
+                <span class="material-icons error-icon">error</span>
+                <span *ngIf="fullName?.errors?.['required']">Full name is required</span>
+                <span *ngIf="fullName?.errors?.['minlength']">Minimum 3 characters required</span>
+              </div>
+            </div>
+
+            <!-- Contact Number -->
+            <div class="form-group">
+              <label for="contactNumber" class="input-label">
+                <span class="material-icons label-icon">phone</span>
+                Contact Number *
+              </label>
+              <input
+                type="tel"
+                id="contactNumber"
+                formControlName="contactNumber"
+                class="input-field"
+                placeholder="Enter 10-digit mobile number"
+                maxlength="10"
+                [class.error]="contactNumber?.invalid && contactNumber?.touched"
+              />
+              <div class="error-message" *ngIf="contactNumber?.invalid && contactNumber?.touched">
+                <span class="material-icons error-icon">error</span>
+                <span *ngIf="contactNumber?.errors?.['required']">Contact number is required</span>
+                <span *ngIf="contactNumber?.errors?.['pattern']">Enter valid 10-digit number</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email" class="input-label">
+              <span class="material-icons label-icon">email</span>
+              Email Address (Optional)
+            </label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="input-field"
+              placeholder="user@example.com"
+              [class.error]="email?.invalid && email?.touched"
+            />
+            <div class="error-message" *ngIf="email?.invalid && email?.touched">
+              <span class="material-icons error-icon">error</span>
+              <span *ngIf="email?.errors?.['email']">Invalid email format</span>
+            </div>
+          </div>
+
+          <!-- College & Qualification Row -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="collegeName" class="input-label">
+                <span class="material-icons label-icon">school</span>
+                College Name (Optional)
+              </label>
+              <input
+                type="text"
+                id="collegeName"
+                formControlName="collegeName"
+                class="input-field"
+                placeholder="Enter college name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="qualification" class="input-label">
+                <span class="material-icons label-icon">workspace_premium</span>
+                Qualification (Optional)
+              </label>
+              <input
+                type="text"
+                id="qualification"
+                formControlName="qualification"
+                class="input-field"
+                placeholder="e.g., B.Tech, MCA"
+              />
+            </div>
+          </div>
+
+          <!-- Experience -->
+          <div class="form-group">
+            <label for="experience" class="input-label">
+              <span class="material-icons label-icon">work</span>
+              Experience (Optional)
+            </label>
+            <input
+              type="text"
+              id="experience"
+              formControlName="experience"
+              class="input-field"
+              placeholder="e.g., Fresher, 2 years"
+            />
+          </div>
+        </div>
+
+        <!-- Lead Details Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <span class="material-icons section-icon">description</span>
+            <h3>Lead Details</h3>
+          </div>
+
+          <div class="form-row">
+            <!-- Course Interested -->
+            <div class="form-group">
+              <label for="courseInterested" class="input-label">
+                <span class="material-icons label-icon">menu_book</span>
+                Course Interested *
+              </label>
+              <input
+                type="text"
+                id="courseInterested"
+                formControlName="courseInterested"
+                class="input-field"
+                placeholder="e.g., Java Full Stack, Python, etc."
+                [class.error]="courseInterested?.invalid && courseInterested?.touched"
+              />
+              <div class="error-message" *ngIf="courseInterested?.invalid && courseInterested?.touched">
+                <span class="material-icons error-icon">error</span>
+                <span *ngIf="courseInterested?.errors?.['required']">Course is required</span>
+              </div>
+            </div>
+
+            <!-- Lead Source -->
+            <div class="form-group">
+              <label for="sourceId" class="input-label">
+                <span class="material-icons label-icon">source</span>
+                Lead Source *
+              </label>
+              <select
+                id="sourceId"
+                formControlName="sourceId"
+                class="input-field"
+                [class.error]="sourceId?.invalid && sourceId?.touched"
+              >
+                <option [value]="null" disabled>Select lead source</option>
+                <option *ngFor="let source of leadSources()" [value]="source.sourceId">
+                  {{ source.name }}
+                </option>
+              </select>
+              <div class="error-message" *ngIf="sourceId?.invalid && sourceId?.touched">
+                <span class="material-icons error-icon">error</span>
+                <span *ngIf="sourceId?.errors?.['required']">Lead source is required</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interest Level -->
+          <div class="form-group">
+            <label for="interestLevel" class="input-label">
+              <span class="material-icons label-icon">favorite</span>
+              Interest Level
+            </label>
+            <div class="status-select-grid">
+              <label class="status-option" [class.selected]="interestLevel?.value === 'LOW'">
+                <input type="radio" formControlName="interestLevel" value="LOW" />
+                <span class="material-icons status-icon-material">trending_down</span>
+                <span class="status-label">Low</span>
+              </label>
+              <label class="status-option" [class.selected]="interestLevel?.value === 'MEDIUM'">
+                <input type="radio" formControlName="interestLevel" value="MEDIUM" />
+                <span class="material-icons status-icon-material">trending_flat</span>
+                <span class="status-label">Medium</span>
+              </label>
+              <label class="status-option" [class.selected]="interestLevel?.value === 'HIGH'">
+                <input type="radio" formControlName="interestLevel" value="HIGH" />
+                <span class="material-icons status-icon-material">trending_up</span>
+                <span class="status-label">High</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Comments -->
+          <div class="form-group">
+            <label for="comments" class="input-label">
+              <span class="material-icons label-icon">comment</span>
+              Comments / Notes
+            </label>
+            <textarea
+              id="comments"
+              formControlName="comments"
+              class="input-field textarea-field"
+              placeholder="Add any additional notes or comments..."
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-icons">close</span>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="isSubmitting() || leadForm.invalid"
+        >
+          <span *ngIf="!isSubmitting()">
+            <span class="material-icons">save</span>
+            Update Lead
+          </span>
+          <span *ngIf="isSubmitting()" class="loading-text">
+            <span class="spinner"></span>
+            Updating...
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

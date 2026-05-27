@@ -1,0 +1,130 @@
+<div class="role-edit-wrapper">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-icons">arrow_back</span>
+        Back
+      </button>
+      <div class="header-info">
+        <h1 class="page-title">Edit Role</h1>
+        <p class="page-subtitle" *ngIf="currentRole()">
+          Update details for {{ currentRole()?.roleName }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading role details...</p>
+  </div>
+
+  <!-- Form Card -->
+  <div *ngIf="!isLoading()" class="form-card">
+    <!-- Role Info Badge -->
+    <div class="role-info-badge" *ngIf="currentRole()">
+      <div class="role-icon-large">
+        <span class="material-icons">{{ getRoleIcon(currentRole()?.roleName || '') }}</span>
+      </div>
+      <div class="role-details">
+        <h3>{{ currentRole()?.roleName }}</h3>
+        <p>Role ID: #{{ currentRole()?.roleId }}</p>
+        <p class="created-date">Created on {{ currentRole()?.createdAt | date: 'dd MMM yyyy' }}</p>
+      </div>
+      <button class="btn-permissions-quick" (click)="navigateToPermissions()">
+        <span class="material-icons">verified_user</span>
+        Manage Permissions
+      </button>
+    </div>
+
+    <form [formGroup]="roleForm" (ngSubmit)="onSubmit()">
+      <!-- Role Name -->
+      <div class="form-group">
+        <label for="roleName" class="input-label">
+          <span class="material-icons label-icon">label</span>
+          Role Name
+        </label>
+        <input
+          type="text"
+          id="roleName"
+          formControlName="roleName"
+          (input)="formatRoleName($event)"
+          class="input-field"
+          placeholder="ROLE_NAME (e.g., ROLE_ADMIN)"
+          [class.error]="roleName?.invalid && roleName?.touched"
+        />
+        <div class="input-hint">
+          Role name must be in UPPERCASE with underscores (e.g., ROLE_ADMIN)
+        </div>
+        <div class="error-message" *ngIf="roleName?.invalid && roleName?.touched">
+          <span *ngIf="roleName?.errors?.['required']">Role name is required</span>
+          <span *ngIf="roleName?.errors?.['minlength']">Minimum 3 characters required</span>
+          <span *ngIf="roleName?.errors?.['pattern']">Only uppercase letters and underscores allowed</span>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description" class="input-label">
+          <span class="material-icons label-icon">description</span>
+          Description
+        </label>
+        <textarea
+          id="description"
+          formControlName="description"
+          class="input-field textarea-field"
+          placeholder="Describe the role's purpose and responsibilities..."
+          rows="4"
+          [class.error]="description?.invalid && description?.touched"
+        ></textarea>
+        <div class="char-count">
+          {{ description?.value?.length || 0 }} characters
+        </div>
+        <div class="error-message" *ngIf="description?.invalid && description?.touched">
+          <span *ngIf="description?.errors?.['required']">Description is required</span>
+          <span *ngIf="description?.errors?.['minlength']">Minimum 10 characters required</span>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="isSubmitting() || roleForm.invalid"
+        >
+          <span *ngIf="!isSubmitting()">
+            <span class="material-icons btn-icon">check</span>
+            Update Role
+          </span>
+          <span *ngIf="isSubmitting()" class="loading-text">
+            <span class="spinner"></span>
+            Updating...
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

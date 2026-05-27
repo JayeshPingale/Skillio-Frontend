@@ -1,0 +1,127 @@
+<div class="error-page">
+  <!-- Theme Toggle -->
+  <button 
+    type="button" 
+    class="theme-toggle-fixed" 
+    (click)="themeService.toggleTheme()"
+    [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+  >
+    <!-- Sun Icon (Light Mode) -->
+    <svg *ngIf="themeService.isDark()" class="theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+    </svg>
+    
+    <!-- Moon Icon (Dark Mode) -->
+    <svg *ngIf="themeService.isLight()" class="theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+    </svg>
+  </button>
+
+  <div class="error-container">
+    <!-- Animated 404 Illustration -->
+    <div class="error-animation">
+      <svg viewBox="0 0 800 600" class="error-svg">
+        <!-- Background circles -->
+        <circle cx="400" cy="300" r="250" fill="var(--accent-primary)" opacity="0.1" class="pulse-bg"/>
+        
+        <!-- Giant 404 Number -->
+        <g class="number-404">
+          <!-- 4 -->
+          <text x="150" y="350" font-size="200" font-weight="900" fill="var(--accent-primary)" class="number-char char-1">4</text>
+          
+          <!-- 0 with magnifying glass -->
+          <circle cx="400" cy="260" r="80" fill="none" stroke="var(--accent-primary)" stroke-width="20" class="zero-circle"/>
+          
+          <!-- Magnifying glass handle -->
+          <line x1="460" y1="320" x2="520" y2="380" stroke="var(--accent-primary)" stroke-width="15" stroke-linecap="round" class="magnify-handle"/>
+          <circle cx="530" cy="390" r="15" fill="var(--accent-primary)" class="magnify-end"/>
+          
+          <!-- 4 -->
+          <text x="550" y="350" font-size="200" font-weight="900" fill="var(--accent-primary)" class="number-char char-2">4</text>
+        </g>
+        
+        <!-- Floating elements -->
+        <g class="floating-elements">
+          <!-- Question marks -->
+          <text x="100" y="150" font-size="40" fill="var(--text-tertiary)" class="float-item float-1">?</text>
+          <text x="680" y="180" font-size="35" fill="var(--text-tertiary)" class="float-item float-2">?</text>
+          <text x="120" y="480" font-size="45" fill="var(--text-tertiary)" class="float-item float-3">?</text>
+          
+          <!-- Stars -->
+          <circle cx="650" cy="450" r="8" fill="var(--accent-secondary)" class="float-item float-4"/>
+          <circle cx="180" cy="380" r="6" fill="var(--accent-secondary)" class="float-item float-5"/>
+        </g>
+        
+        <!-- Lost person illustration -->
+        <g class="person-lost">
+          <!-- Body -->
+          <ellipse cx="400" cy="480" rx="35" ry="50" fill="var(--text-tertiary)" class="person-body"/>
+          <!-- Head -->
+          <circle cx="400" cy="420" r="30" fill="var(--text-tertiary)" class="person-head"/>
+          <!-- Arms (confused) -->
+          <line x1="370" y1="460" x2="340" y2="440" stroke="var(--text-tertiary)" stroke-width="12" stroke-linecap="round" class="person-arm-left"/>
+          <line x1="430" y1="460" x2="460" y2="440" stroke="var(--text-tertiary)" stroke-width="12" stroke-linecap="round" class="person-arm-right"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Error Content -->
+    <div class="error-content">
+      <h1 class="error-title">Oops! Page Not Found</h1>
+      <p class="error-message">
+        The page you're looking for seems to have wandered off into the digital wilderness. 
+        Don't worry, we'll help you find your way back!
+      </p>
+
+      <!-- Error Code Badge -->
+      <div class="error-badge">
+        <span class="badge-label">Error Code:</span>
+        <span class="badge-value">404</span>
+      </div>
+
+      <!-- Auto Redirect Info -->
+      <div class="redirect-info">
+        <svg class="redirect-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>Redirecting to login in <strong>{{ countdown }}</strong> seconds</span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button class="btn btn-primary" (click)="goToLogin()">
+          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          Go to Login Page
+        </button>
+
+        <button class="btn btn-secondary" (click)="goBack()">
+          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Go Back
+        </button>
+      </div>
+
+      <!-- Helpful Links
+      <div class="helpful-links">
+        <p class="links-title">You might also want to:</p>
+        <div class="link-items">
+          <a href="/help" class="link-item">
+            <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Help Center
+          </a> -->
+          <!-- <a href="/contact" class="link-item">
+            <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            Contact Support
+          </a> -->
+        </div>
+      </div>
+    </div>
+  <!-- </div>
+</div> -->

@@ -1,0 +1,216 @@
+<div class="payment-manage-container">
+  <!-- 🎯 Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div class="header-text">
+        <h1 class="page-title">Record Payment</h1>
+        <p class="page-subtitle" *ngIf="studentName()">
+          For: <strong>{{ studentName() }}</strong> | 
+          Balance: <strong class="balance-amount">₹{{ balanceAmount() | number:'1.2-2' }}</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Success Message -->
+  <div class="alert alert-success" *ngIf="successMessage()">
+    <span class="material-icons">check_circle</span>
+    {{ successMessage() }}
+  </div>
+
+  <!-- ❌ Error Message -->
+  <div class="alert alert-error" *ngIf="errorMessage()">
+    <span class="material-icons">error</span>
+    {{ errorMessage() }}
+  </div>
+
+  <div class="content-wrapper">
+    
+    <!-- 💳 Payment Form Card -->
+    <div class="card payment-form-card">
+      <div class="card-header">
+        <span class="material-icons">payment</span>
+        <h2>Payment Details</h2>
+      </div>
+
+      <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Hidden Fees ID -->
+        <input type="hidden" formControlName="feesId">
+
+        <!-- Amount -->
+        <div class="form-group">
+          <label for="amount" class="form-label required">
+            <span class="material-icons">currency_rupee</span>
+            Amount
+          </label>
+          <input 
+            type="number" 
+            id="amount" 
+            formControlName="amount" 
+            class="form-control"
+            placeholder="Enter amount"
+            min="1"
+            step="0.01">
+          <div class="error-message" 
+               *ngIf="paymentForm.get('amount')?.touched && paymentForm.get('amount')?.invalid">
+            <span class="material-icons">error_outline</span>
+            Amount is required and must be greater than 0
+          </div>
+        </div>
+
+        <!-- Payment Mode -->
+        <div class="form-group">
+          <label for="paymentMode" class="form-label required">
+            <span class="material-icons">credit_card</span>
+            Payment Mode
+          </label>
+          <select id="paymentMode" formControlName="paymentMode" class="form-control">
+            <option *ngFor="let mode of paymentModes" [value]="mode">
+              {{ mode }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Payment Date -->
+        <div class="form-group">
+          <label for="paymentDate" class="form-label required">
+            <span class="material-icons">calendar_today</span>
+            Payment Date
+          </label>
+          <input 
+            type="date" 
+            id="paymentDate" 
+            formControlName="paymentDate" 
+            class="form-control">
+        </div>
+
+        <!-- Transaction ID (Optional) -->
+        <div class="form-group">
+          <label for="transactionId" class="form-label">
+            <span class="material-icons">receipt</span>
+            Transaction ID (Optional)
+          </label>
+          <input 
+            type="text" 
+            id="transactionId" 
+            formControlName="transactionId" 
+            class="form-control"
+            placeholder="Enter transaction ID for online payments">
+        </div>
+
+        <!-- Remarks -->
+        <div class="form-group">
+          <label for="remarks" class="form-label">
+            <span class="material-icons">notes</span>
+            Remarks (Optional)
+          </label>
+          <textarea 
+            id="remarks" 
+            formControlName="remarks" 
+            class="form-control"
+            rows="3"
+            placeholder="Add any additional notes..."></textarea>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" 
+                  class="btn btn-secondary" 
+                  (click)="cancel()"
+                  [disabled]="isLoading()">
+            <span class="material-icons">close</span>
+            Cancel
+          </button>
+          
+          <button type="submit" 
+                  class="btn btn-primary" 
+                  [disabled]="paymentForm.invalid || isLoading()">
+            <span class="material-icons" *ngIf="!isLoading()">save</span>
+            <span class="spinner" *ngIf="isLoading()"></span>
+            {{ isLoading() ? 'Recording...' : 'Record Payment' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 📋 Payment History Card -->
+    <div class="card payment-history-card">
+      <div class="card-header">
+        <span class="material-icons">history</span>
+        <h2>Payment History</h2>
+        <span class="badge badge-count">{{ paymentHistory().length }}</span>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-container" *ngIf="isLoadingHistory()">
+        <div class="spinner-large"></div>
+        <p>Loading payment history...</p>
+      </div>
+
+      <!-- No Payments -->
+      <div class="empty-state" *ngIf="!isLoadingHistory() && paymentHistory().length === 0">
+        <span class="material-icons empty-icon">receipt_long</span>
+        <p>No payment history found</p>
+        <p class="empty-subtitle">Start by recording the first payment above</p>
+      </div>
+
+      <!-- Payment History Table -->
+      <div class="table-container" *ngIf="!isLoadingHistory() && paymentHistory().length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Receipt No</th>
+              <th>Amount</th>
+              <th>Mode</th>
+              <th>Status</th>
+              <th>Received By</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let payment of paymentHistory(); let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>{{ payment.paymentDate | date:'dd MMM yyyy' }}</td>
+              <td>
+                <span class="receipt-number">{{ payment.receiptNumber }}</span>
+              </td>
+              <td>
+                <span class="amount-cell">₹{{ payment.amount | number:'1.2-2' }}</span>
+              </td>
+              <td>
+                <span class="payment-mode-badge">
+                  <span class="material-icons">{{ getPaymentModeIcon(payment.paymentMode) }}</span>
+                  {{ payment.paymentMode }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="getPaymentStatusBadge(payment.status)">
+                  {{ payment.status }}
+                </span>
+              </td>
+              <td>{{ payment.receivedByUserName }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Total Paid Summary -->
+        <div class="summary-footer">
+          <div class="summary-item">
+            <span class="summary-label">Total Payments:</span>
+            <span class="summary-value">{{ paymentHistory().length }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Total Paid:</span>
+            <span class="total-amount">₹{{ calculateTotalPaid() | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

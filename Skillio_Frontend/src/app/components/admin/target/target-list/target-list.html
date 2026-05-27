@@ -1,0 +1,299 @@
+<app-confirmation-dialog></app-confirmation-dialog>
+<div class="target-list-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">flag</span>
+        Targets
+      </h1>
+      <p class="page-subtitle">Manage and track sales executive targets</p>
+    </div>
+    <div class="header-right">
+      @if (isAdmin()) {
+        <button class="btn-create" (click)="navigateToCreate()">
+          <span class="material-icons btn-icon">add_circle</span>
+          Create Target
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-icons">flag</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Targets</span>
+        <span class="stat-value">{{ stats().total }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-active">
+      <div class="stat-icon">
+        <span class="material-icons">play_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Active</span>
+        <span class="stat-value">{{ stats().active }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-on-track">
+      <div class="stat-icon">
+        <span class="material-icons">trending_up</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">On Track</span>
+        <span class="stat-value">{{ stats().onTrack }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-at-risk">
+      <div class="stat-icon">
+        <span class="material-icons">warning</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">At Risk</span>
+        <span class="stat-value">{{ stats().atRisk }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-completed">
+      <div class="stat-icon">
+        <span class="material-icons">check_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Completed</span>
+        <span class="stat-value">{{ stats().completed }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by sales executive..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select
+      [value]="selectedStatus()"
+      (change)="updateStatus($any($event.target).value)"
+      class="status-filter"
+    >
+      <option *ngFor="let status of statusOptions" [value]="status">
+        {{ status === 'ALL' ? 'All Status' : status.replace('_', ' ') }}
+      </option>
+    </select>
+
+    <select
+      [value]="selectedPeriod()"
+      (change)="updatePeriod($any($event.target).value)"
+      class="period-filter"
+    >
+      <option *ngFor="let period of periodOptions" [value]="period">
+        {{ period === 'ALL' ? 'All Periods' : period }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading targets...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading()" class="table-container">
+    <table class="target-table">
+      <thead>
+        <tr>
+          <th><span class="material-icons">tag</span> ID</th>
+          <th><span class="material-icons">person</span> SALES EXECUTIVE</th>
+          <th><span class="material-icons">calendar_month</span> PERIOD</th>
+          <th><span class="material-icons">groups</span> LEADS</th>
+          <th><span class="material-icons">school</span> ENROLLMENTS</th>
+          <th><span class="material-icons">currency_rupee</span> REVENUE</th>
+          <th><span class="material-icons">event</span> DATES</th>
+          <th><span class="material-icons">info</span> STATUS</th>
+          <th><span class="material-icons">settings</span> ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let target of filteredTargets()" class="table-row">
+          <!-- ID -->
+          <td>
+            <span class="target-id-badge">#{{ target.targetId }}</span>
+          </td>
+
+          <!-- Sales Executive -->
+          <td>
+            <div class="executive-cell">
+              <span class="material-icons executive-icon">account_circle</span>
+              <div class="executive-info">
+                <span class="executive-name">{{ target.userName }}</span>
+                <span class="executive-email">{{ target.userEmail }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Period -->
+          <td>
+            <span class="period-badge">{{ target.targetPeriod }}</span>
+          </td>
+
+          <!-- Leads -->
+          <td>
+            <div class="progress-cell">
+              <div class="progress-text">
+                <span class="achieved">{{ target.achievedLeads }}</span>
+                <span class="separator">/</span>
+                <span class="target-val">{{ target.targetLeads }}</span>
+              </div>
+              <div class="progress-bar-wrapper">
+                <div
+                  class="progress-bar"
+                  [ngClass]="getProgressClass(target.leadsAchievementPercentage)"
+                  [style.width.%]="target.leadsAchievementPercentage"
+                ></div>
+              </div>
+              <span class="progress-percentage"
+                >{{ target.leadsAchievementPercentage | number: '1.0-1' }}%</span
+              >
+            </div>
+          </td>
+
+          <!-- Enrollments -->
+          <td>
+            <div class="progress-cell">
+              <div class="progress-text">
+                <span class="achieved">{{ target.achievedEnrollments }}</span>
+                <span class="separator">/</span>
+                <span class="target-val">{{ target.targetEnrollments }}</span>
+              </div>
+              <div class="progress-bar-wrapper">
+                <div
+                  class="progress-bar"
+                  [ngClass]="getProgressClass(target.enrollmentsAchievementPercentage)"
+                  [style.width.%]="target.enrollmentsAchievementPercentage"
+                ></div>
+              </div>
+              <span class="progress-percentage"
+                >{{ target.enrollmentsAchievementPercentage | number: '1.0-1' }}%</span
+              >
+            </div>
+          </td>
+
+          <!-- Revenue -->
+          <td>
+            <div class="progress-cell">
+              <div class="progress-text">
+                <span class="achieved">₹{{ target.achievedRevenue | number }}</span>
+                <span class="separator">/</span>
+                <span class="target-val">₹{{ target.targetRevenue | number }}</span>
+              </div>
+              <div class="progress-bar-wrapper">
+                <div
+                  class="progress-bar"
+                  [ngClass]="getProgressClass(target.revenueAchievementPercentage)"
+                  [style.width.%]="target.revenueAchievementPercentage"
+                ></div>
+              </div>
+              <span class="progress-percentage"
+                >{{ target.revenueAchievementPercentage | number: '1.0-1' }}%</span
+              >
+            </div>
+          </td>
+
+          <!-- Dates -->
+          <td>
+            <div class="date-range">
+              <span class="date-text">{{ target.startDate | date: 'dd MMM' }}</span>
+              <span class="material-icons date-arrow">arrow_forward</span>
+              <span class="date-text">{{ target.endDate | date: 'dd MMM yyyy' }}</span>
+            </div>
+          </td>
+
+          <!-- Status -->
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(target.status)">
+              <span class="material-icons status-icon">{{ getStatusIcon(target.status) }}</span>
+              {{ target.status.replace('_', ' ') }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <div class="actions-cell">
+                 @if (isAdmin()) {
+              <button
+                class="btn-action btn-achievement"
+                (click)="navigateToUpdateAchievement(target.targetId)"
+                title="Update Achievement"
+                *ngIf="target.status !== 'COMPLETED'"
+              >
+                <span class="material-icons">task_alt</span>
+              </button>
+           
+                <button
+                  class="btn-action btn-edit"
+                  (click)="navigateToEdit(target.targetId)"
+                  title="Edit Target"
+                  *ngIf="target.status !== 'COMPLETED'"
+                >
+                  <span class="material-icons">edit</span>
+                </button>
+                <button
+                  class="btn-action btn-complete"
+                  (click)="markAsCompleted(target.targetId, target.userName)"
+                  title="Mark Completed"
+                  *ngIf="target.status !== 'COMPLETED'"
+                >
+                  <span class="material-icons">done_all</span>
+                </button>
+                <button
+                  class="btn-action btn-delete"
+                  (click)="deleteTarget(target.targetId, target.userName)"
+                  title="Delete Target"
+                >
+                  <span class="material-icons">delete</span>
+                </button>
+              } @else {
+                <!-- ✅ Sales Exec sees "View Only" -->
+                <span class="view-only-badge">View Only</span>
+              }
+            </div>
+          </td>
+        </tr>
+
+        <!-- No Data -->
+        <tr *ngIf="filteredTargets().length === 0" class="no-data-row">
+          <td colspan="9" class="no-data-cell">
+            <span class="material-icons no-data-icon">flag</span>
+            <p>No targets found</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

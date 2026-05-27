@@ -1,0 +1,590 @@
+<div
+  class="sales-layout"
+  [class.sidebar-collapsed]="isSidebarCollapsed() && !isHovering()"
+  [class.sidebar-hovering]="isHovering()"
+>
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside
+    class="sidebar"
+    [class.mobile-open]="isMobileSidebarOpen()"
+    (mouseenter)="onMouseEnter()"
+    (mouseleave)="onMouseLeave()"
+  >
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      <!-- Full Logo (Expanded) -->
+      <div class="logo" *ngIf="!isSidebarCollapsed() || isHovering()">
+        <span class="material-icons logo-icon">dashboard</span>
+        <span class="logo-text">Sales Panel</span>
+        <span class="version-badge">v1.0</span>
+      </div>
+
+      <!-- Collapsed Logo (Icon Only) -->
+      <div class="logo-collapsed" *ngIf="isSidebarCollapsed() && !isHovering()">
+        <span class="material-icons logo-icon">dashboard</span>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="sidebar-nav">
+      <a
+        *ngFor="let item of filteredNavItems()"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.route === '/sales-dashboard' }"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        [title]="item.label"
+      >
+        <span class="material-icons nav-icon">{{ item.icon }}</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">{{ item.label }}</span>
+      </a>
+    </nav>
+    <nav *ngIf="false" class="sidebar-nav">
+      <a
+        routerLink="/sales-dashboard"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="Dashboard"
+      >
+        <span class="material-icons nav-icon">grid_view</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">Dashboard</span>
+      </a>
+
+      <a
+        routerLink="/sales-dashboard/leads"
+        routerLinkActive="active"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="My Leads"
+      >
+        <span class="material-icons nav-icon">group</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">My Leads</span>
+      </a>
+
+      <a
+        routerLink="/sales-dashboard/follow-ups"
+        routerLinkActive="active"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="Follow-ups"
+      >
+        <span class="material-icons nav-icon">schedule</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">Follow-ups</span>
+      </a>
+
+      <a
+        routerLink="/sales-dashboard/enrollments"
+        routerLinkActive="active"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="Enrollments"
+      >
+        <span class="material-icons nav-icon">assignment</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">Enrollments</span>
+      </a>
+
+      <a
+        routerLink="/sales-dashboard/students"
+        routerLinkActive="active"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="Students"
+      >
+        <span class="material-icons nav-icon">person</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">Students</span>
+      </a>
+      <!-- ✅ ADD: Student Fees Link -->
+      <a
+        routerLink="/sales-dashboard/student-fees"
+        routerLinkActive="active"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="Student Fees"
+      >
+        <span class="material-icons nav-icon">payments</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">Students Fees</span>
+      </a>
+
+      <a
+        routerLink="/sales-dashboard/payments"
+        routerLinkActive="active"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="Payments"
+      >
+        <span class="material-icons nav-icon">receipt_long</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">Payments</span>
+      </a>
+
+      <a
+        routerLink="/sales-dashboard/targets"
+        routerLinkActive="active"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="My Targets"
+      >
+        <span class="material-icons nav-icon">flag</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">My Targets</span>
+      </a>
+
+      <a
+        routerLink="/sales-dashboard/commissions"
+        routerLinkActive="active"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="Commissions"
+      >
+
+        <span class="material-icons nav-icon">payments</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">Commissions</span>
+      </a>
+<a routerLink="/sales-dashboard/commission-request" routerLinkActive="active"
+   class="nav-item" (click)="onNavItemClick()" title="Request Commission">
+  <span class="material-icons nav-icon">request_quote</span>
+  <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">Request Commission</span>
+</a>
+      <a
+        routerLink="/sales-dashboard/courses"
+        routerLinkActive="active"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="Courses"
+      >
+        <span class="material-icons nav-icon">school</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">Courses</span>
+      </a>
+
+      <a
+        routerLink="/sales-dashboard/batches"
+        routerLinkActive="active"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="Batches"
+      >
+        <span class="material-icons nav-icon">groups</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">Batches</span>
+      </a>
+
+      <a
+        routerLink="/sales-dashboard/invoices"
+        routerLinkActive="active"
+        class="nav-item"
+        (click)="onNavItemClick()"
+        title="Invoices"
+      >
+        <span class="material-icons nav-icon">description</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed() || isHovering()">Invoices</span>
+      </a>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <!-- Theme Toggle Button -->
+      <button
+        class="footer-btn"
+        (click)="themeService.toggleTheme()"
+        [title]="themeService.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+      >
+        <span class="material-icons footer-icon">
+          {{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}
+        </span>
+        <span class="footer-label" *ngIf="!isSidebarCollapsed() || isHovering()">
+          {{ themeService.isDark() ? 'Light Mode' : 'Dark Mode' }}
+        </span>
+      </button>
+
+      <!-- Logout Button -->
+      <button class="footer-btn logout-btn" (click)="logout()" title="Logout">
+        <span class="material-icons footer-icon">logout</span>
+        <span class="footer-label" *ngIf="!isSidebarCollapsed() || isHovering()">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <!-- Left Section -->
+      <div class="top-bar-left">
+        <!-- Mobile Menu Toggle (Shows on Mobile) -->
+        <button
+          class="mobile-menu-toggle"
+          (click)="toggleMobileSidebar()"
+          title="Menu"
+          aria-label="Toggle mobile menu"
+        >
+          <span class="material-icons">menu</span>
+        </button>
+
+        <!-- Sidebar Toggle (Shows on Desktop) -->
+        <button
+          class="sidebar-toggle"
+          (click)="toggleSidebar()"
+          title="Toggle Sidebar"
+          aria-label="Toggle sidebar"
+        >
+          <span class="material-icons">
+            {{ isSidebarCollapsed() ? 'menu' : 'menu_open' }}
+          </span>
+        </button>
+
+        <!-- Page Title -->
+        <h2 class="page-title">
+          {{ isExactDashboardRoute() ? 'Dashboard' : 'Sales Panel' }}
+        </h2>
+      </div>
+
+      <!-- Right Section -->
+      <div class="top-bar-right">
+        <!-- Notifications Button -->
+        <!-- <button class="top-bar-btn" title="Notifications">
+          <span class="material-icons">notifications</span>
+        </button> -->
+        <app-notification></app-notification>
+        <!-- User Profile -->
+        <div class="user-profile" title="View profile">
+          <div class="user-info">
+            <span class="user-name">{{ authService.getFullName() }}</span>
+            <span class="user-role">Sales Executive</span>
+          </div>
+          <div class="user-avatar">
+            {{ authService.getFullName()?.charAt(0) || 'S' }}
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area (Scrollable) -->
+    <main class="content-area">
+      <!-- Dashboard Content - Only show on exact /sales-dashboard route -->
+      <div class="dashboard-content" *ngIf="isExactDashboardRoute()">
+        <!-- Error Alert -->
+        <div *ngIf="errorMessage()" class="error-alert">
+          <span class="material-icons">error</span>
+          <span>{{ errorMessage() }}</span>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading()" class="loading-container">
+          <div class="spinner"></div>
+          <p>Loading dashboard data...</p>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div *ngIf="!isLoading()">
+          <!-- Welcome Header -->
+          <div class="welcome-header">
+            <div class="welcome-content">
+              <h2>Welcome back, {{ authService.getFullName() }}! 👋</h2>
+              <p>Here's your performance overview</p>
+            </div>
+            <button
+              *ngIf="authService.hasPermission('LEAD_CREATE')"
+              class="btn-create-lead"
+              (click)="navigateToCreateLead()"
+            >
+              <span class="material-icons">add_circle</span>
+              Create Lead
+            </button>
+          </div>
+
+          <!-- Stats Cards Row 1: Lead Statistics -->
+          <div class="stats-row">
+            <div class="stat-card stat-primary">
+              <div class="stat-icon-wrapper">
+                <span class="material-icons stat-icon">group</span>
+              </div>
+              <div class="stat-info">
+                <p class="stat-label">Total Leads</p>
+                <h3 class="stat-value">{{ totalLeads() }}</h3>
+                <p class="stat-trend">
+                  <span class="material-icons trend-icon">trending_up</span>
+                  All time
+                </p>
+              </div>
+            </div>
+
+            <div class="stat-card stat-new">
+              <div class="stat-icon-wrapper">
+                <span class="material-icons stat-icon">fiber_new</span>
+              </div>
+              <div class="stat-info">
+                <p class="stat-label">New Leads</p>
+                <h3 class="stat-value">{{ newLeads() }}</h3>
+                <p class="stat-trend">Awaiting contact</p>
+              </div>
+            </div>
+
+            <div class="stat-card stat-interested">
+              <div class="stat-icon-wrapper">
+                <span class="material-icons stat-icon">star</span>
+              </div>
+              <div class="stat-info">
+                <p class="stat-label">Interested</p>
+                <h3 class="stat-value">{{ interestedLeads() }}</h3>
+                <p class="stat-trend">Hot prospects</p>
+              </div>
+            </div>
+
+            <div class="stat-card stat-success">
+              <div class="stat-icon-wrapper">
+                <span class="material-icons stat-icon">check_circle</span>
+              </div>
+              <div class="stat-info">
+                <p class="stat-label">Converted</p>
+                <h3 class="stat-value">{{ convertedLeads() }}</h3>
+                <p class="stat-trend">
+                  <span class="material-icons trend-icon">analytics</span>
+                  {{ conversionRate() }}% rate
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats Cards Row 2: Targets & Commissions -->
+          <div class="stats-row">
+            <div class="stat-card stat-primary">
+              <div class="stat-icon-wrapper">
+                <span class="material-icons stat-icon">flag</span>
+              </div>
+              <div class="stat-info">
+                <p class="stat-label">Active Targets</p>
+                <h3 class="stat-value">{{ activeTargets() }}</h3>
+                <p class="stat-trend">{{ completedTargets() }} completed</p>
+              </div>
+            </div>
+
+            <div class="stat-card stat-interested">
+              <div class="stat-icon-wrapper">
+                <span class="material-icons stat-icon">verified</span>
+              </div>
+              <div class="stat-info">
+                <p class="stat-label">Eligible Commission</p>
+                <h3 class="stat-value">₹{{ totalEligibleCommission() | number: '1.2-2' }}</h3>
+                <p class="stat-trend">Awaiting payment</p>
+              </div>
+            </div>
+
+            <div class="stat-card stat-success">
+              <div class="stat-icon-wrapper">
+                <span class="material-icons stat-icon">payments</span>
+              </div>
+              <div class="stat-info">
+                <p class="stat-label">Paid Commission</p>
+                <h3 class="stat-value">₹{{ totalPaidCommission() | number: '1.2-2' }}</h3>
+                <p class="stat-trend">Total earned</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Current Target & Recent Leads Section -->
+          <div class="main-grid">
+            <!-- Current Target Card -->
+            <div class="card target-card" *ngIf="currentMonthTarget()">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <span class="material-icons card-title-icon">flag</span>
+                  Current Target
+                </h3>
+                <span
+                  style="
+                    padding: 0.35rem 0.75rem;
+                    border-radius: 6px;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    background: rgba(16, 185, 129, 0.2);
+                    color: #10b981;
+                  "
+                >
+                  Active
+                </span>
+              </div>
+              <div class="card-body">
+                <div class="target-info">
+                  <div class="target-item">
+                    <span class="target-label">Period:</span>
+                    <span class="target-value">{{ currentMonthTarget().targetPeriod }}</span>
+                  </div>
+                  <div class="target-item">
+                    <span class="target-label">Duration:</span>
+                    <span class="target-value">
+                      {{ formatDate(currentMonthTarget().startDate) }} -
+                      {{ formatDate(currentMonthTarget().endDate) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="target-metrics">
+                  <!-- Leads Progress -->
+                  <div class="metric-item">
+                    <div class="metric-header">
+                      <span class="metric-label">Leads</span>
+                      <span class="metric-value">
+                        {{ currentMonthTarget().achievedLeads }}/{{
+                          currentMonthTarget().targetLeads
+                        }}
+                      </span>
+                    </div>
+                    <div class="progress-bar">
+                      <div
+                        class="progress-fill"
+                        [class]="getProgressClass(currentMonthTarget().leadsAchievementPercentage)"
+                        [style.width.%]="currentMonthTarget().leadsAchievementPercentage"
+                      ></div>
+                    </div>
+                    <span class="metric-percentage"
+                      >{{ currentMonthTarget().leadsAchievementPercentage }}%</span
+                    >
+                  </div>
+
+                  <!-- Enrollments Progress -->
+                  <div class="metric-item">
+                    <div class="metric-header">
+                      <span class="metric-label">Enrollments</span>
+                      <span class="metric-value">
+                        {{ currentMonthTarget().achievedEnrollments }}/{{
+                          currentMonthTarget().targetEnrollments
+                        }}
+                      </span>
+                    </div>
+                    <div class="progress-bar">
+                      <div
+                        class="progress-fill"
+                        [class]="
+                          getProgressClass(currentMonthTarget().enrollmentsAchievementPercentage)
+                        "
+                        [style.width.%]="currentMonthTarget().enrollmentsAchievementPercentage"
+                      ></div>
+                    </div>
+                    <span class="metric-percentage"
+                      >{{ currentMonthTarget().enrollmentsAchievementPercentage }}%</span
+                    >
+                  </div>
+
+                  <!-- Revenue Progress -->
+                  <div class="metric-item">
+                    <div class="metric-header">
+                      <span class="metric-label">Revenue</span>
+                      <span class="metric-value">
+                        ₹{{ currentMonthTarget().achievedRevenue | number }}/₹{{
+                          currentMonthTarget().targetRevenue | number
+                        }}
+                      </span>
+                    </div>
+                    <div class="progress-bar">
+                      <div
+                        class="progress-fill"
+                        [class]="
+                          getProgressClass(currentMonthTarget().revenueAchievementPercentage)
+                        "
+                        [style.width.%]="currentMonthTarget().revenueAchievementPercentage"
+                      ></div>
+                    </div>
+                    <span class="metric-percentage"
+                      >{{ currentMonthTarget().revenueAchievementPercentage }}%</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- No Target Message -->
+            <div class="card target-card" *ngIf="!currentMonthTarget()">
+              <div class="empty-state">
+                <span class="material-icons empty-icon">flag</span>
+                <h3>No Active Target</h3>
+                <p>You don't have any active targets assigned yet.</p>
+              </div>
+            </div>
+
+            <!-- Recent Leads Card -->
+            <div class="card recent-leads-card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <span class="material-icons card-title-icon">schedule</span>
+                  Recent Leads
+                </h3>
+                <a [routerLink]="['/sales-dashboard/leads']" class="view-all-link">
+                  View All
+                  <span class="material-icons">arrow_forward</span>
+                </a>
+              </div>
+              <div class="card-body">
+                <div *ngIf="recentLeads().length === 0" class="empty-state">
+                  <span class="material-icons empty-icon">inbox</span>
+                  <p>No leads yet</p>
+                </div>
+
+                <div *ngIf="recentLeads().length > 0" class="leads-list">
+                  <div *ngFor="let lead of recentLeads()" class="lead-item">
+                    <div class="lead-avatar">
+                      <span class="material-icons">person</span>
+                    </div>
+                    <div class="lead-info">
+                      <h4 class="lead-name">{{ lead.fullName }}</h4>
+                      <p class="lead-details">
+                        <span class="material-icons" style="font-size: 1rem">school</span>
+                        {{ lead.courseInterested }}
+                      </p>
+                      <p class="lead-date">{{ formatDate(lead.createdAt) }}</p>
+                    </div>
+                    <span class="lead-status" [class]="getStatusClass(lead.status)">
+                      {{ lead.status }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="quick-actions-section">
+            <h3 class="section-title">Quick Actions</h3>
+            <div class="quick-actions-grid">
+              <button class="action-card" (click)="navigateToLeads()">
+                <span class="material-icons action-icon">group</span>
+                <span class="action-text">View Leads</span>
+              </button>
+              <button *ngIf="authService.hasPermission('LEAD_CREATE')" class="action-card" (click)="navigateToCreateLead()">
+                <span class="material-icons action-icon">add_circle</span>
+                <span class="action-text">Create Lead</span>
+              </button>
+              <button class="action-card" (click)="navigateToFollowUps()">
+                <span class="material-icons action-icon">schedule</span>
+                <span class="action-text">Follow-ups</span>
+              </button>
+              <button class="action-card" (click)="navigateToTargets()">
+                <span class="material-icons action-icon">flag</span>
+                <span class="action-text">My Targets</span>
+              </button>
+              <button class="action-card" (click)="navigateToCommissions()">
+                <span class="material-icons action-icon">payments</span>
+                <span class="action-text">Commissions</span>
+              </button>
+              <button class="action-card" (click)="navigateToEnrollments()">
+                <span class="material-icons action-icon">assignment</span>
+                <span class="action-text">Enrollments</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Router Outlet for Child Routes -->
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <!-- Mobile Overlay (Dark backdrop when sidebar is open on mobile) -->
+  <div
+    class="mobile-overlay"
+    *ngIf="isMobileSidebarOpen()"
+    (click)="closeMobileSidebar()"
+    aria-hidden="true"
+  ></div>
+</div>

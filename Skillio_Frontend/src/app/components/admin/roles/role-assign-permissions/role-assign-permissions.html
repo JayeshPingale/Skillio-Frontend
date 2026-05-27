@@ -1,0 +1,157 @@
+<div class="permissions-wrapper">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="cancel()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Back
+      </button>
+      <div class="header-info">
+        <h1 class="page-title">Assign Permissions</h1>
+        <p class="page-subtitle" *ngIf="currentRole()">
+          Configure permissions for {{ currentRole()?.roleName }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <svg class="success-icon" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+    </svg>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage()" class="error-alert">
+    <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+    </svg>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading permissions...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading()" class="content-container">
+    <!-- Role Info Card -->
+    <div class="role-info-card" *ngIf="currentRole()">
+      <div class="role-header">
+        <!-- ✅ Material Symbol Icon -->
+        <div class="role-icon">
+          <span class="material-symbols-outlined">{{ getRoleIcon(currentRole()?.roleName || '') }}</span>
+        </div>
+        <div class="role-details">
+          <h3>{{ currentRole()?.roleName }}</h3>
+          <p>{{ currentRole()?.description }}</p>
+        </div>
+      </div>
+      <div class="selection-summary">
+        <div class="summary-item">
+          <span class="summary-label">Selected</span>
+          <span class="summary-value">{{ selectedPermissionIds().size }}</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+          <span class="summary-label">Total</span>
+          <span class="summary-value">{{ allPermissions().length }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button class="btn-quick" (click)="selectAll()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Select All
+      </button>
+      <button class="btn-quick" (click)="clearAll()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        Clear All
+      </button>
+    </div>
+
+    <!-- Permission Groups -->
+    <div class="permissions-grid">
+      <div *ngFor="let group of permissionGroups(); trackBy: trackByModule" class="module-card">
+        <div class="module-header" (click)="toggleModule(group.module)">
+          <div class="module-info">
+            <!-- ✅ Material Symbol Icon -->
+            <span class="module-icon material-symbols-outlined">{{ getModuleIcon(group.module) }}</span>
+            <div class="module-text">
+              <h4>{{ group.module }}</h4>
+              <p>{{ group.selectedCount }} of {{ group.totalCount }} selected</p>
+            </div>
+          </div>
+          <div class="module-checkbox">
+            <input 
+              type="checkbox" 
+              [checked]="isModuleFullySelected(group.module)"
+              [indeterminate]="isModulePartiallySelected(group.module)"
+              (click)="$event.stopPropagation()"
+              (change)="toggleModule(group.module)"
+            />
+          </div>
+        </div>
+
+        <div class="permissions-list">
+          <label 
+            *ngFor="let permission of group.permissions; trackBy: trackByPermission"
+            class="permission-item"
+            [class.selected]="isPermissionSelected(permission.permissionId)"
+          >
+            <div class="permission-info">
+              <span class="permission-name">{{ permission.permissionName }}</span>
+              <span class="permission-desc">{{ permission.description }}</span>
+            </div>
+            <input 
+              type="checkbox"
+              [checked]="isPermissionSelected(permission.permissionId)"
+              (change)="togglePermission(permission.permissionId)"
+            />
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit Actions -->
+    <div class="submit-actions">
+      <button
+        type="button"
+        class="btn-cancel"
+        (click)="cancel()"
+        [disabled]="isSubmitting()"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn-submit"
+        (click)="onSubmit()"
+        [disabled]="isSubmitting()"
+      >
+        <span *ngIf="!isSubmitting()">
+          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Save Permissions
+        </span>
+        <span *ngIf="isSubmitting()" class="loading-text">
+          <span class="spinner"></span>
+          Saving...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>

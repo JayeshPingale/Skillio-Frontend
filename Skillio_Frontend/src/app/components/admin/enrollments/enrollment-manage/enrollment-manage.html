@@ -1,0 +1,415 @@
+<div class="enrollment-manage-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">
+          {{ isEditMode() ? 'edit_note' : 'school' }}
+        </span>
+        {{ isEditMode() ? 'Edit Enrollment' : 'New Enrollment' }}
+      </h1>
+      <p class="page-subtitle">
+        {{ isEditMode() ? 'Update enrollment details' : 'Create a new student enrollment' }}
+      </p>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-icons btn-icon">arrow_back</span>
+        Back to List
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading enrollment details...</p>
+  </div>
+
+  <!-- Form card -->
+  <div *ngIf="!isLoading()" class="form-card">
+    <!-- Info (edit mode) -->
+    <div *ngIf="isEditMode() && currentEnrollment()" class="info-card">
+      <div class="info-header">
+        <span class="material-icons info-icon">school</span>
+        <span class="info-title">Enrollment Information</span>
+      </div>
+      <div class="info-content">
+        <div class="info-item">
+          <span class="info-label">Student:</span>
+          <span class="info-value">{{ currentEnrollment()?.studentName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Course:</span>
+          <span class="info-value">{{ currentEnrollment()?.courseName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Batch:</span>
+          <span class="info-value">{{ currentEnrollment()?.batchName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Enrolled On:</span>
+          <span class="info-value">
+            {{ currentEnrollment()?.createdAt | date: 'dd MMM yyyy, hh:mm a' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="enrollmentForm" (ngSubmit)="onSubmit()">
+      <!-- Lead selection (CREATE ONLY) -->
+      <div class="form-group" *ngIf="!isEditMode()">
+        <label class="form-label">
+          <span class="material-icons label-icon">person_search</span>
+          Select Lead
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">search</span>
+          <select
+            formControlName="leadId"
+            class="form-select"
+            [class.input-error]="
+              !enrollmentForm.get('leadId')?.value &&
+              enrollmentForm.get('leadId')?.touched
+            "
+          >
+            <option value="">-- Select a lead --</option>
+            <option *ngFor="let lead of leads()" [value]="lead.leadId">
+              {{ lead.fullName }} - {{ lead.email }}
+            </option>
+          </select>
+        </div>
+        <span
+          class="error-message"
+          *ngIf="
+            !enrollmentForm.get('leadId')?.value &&
+            enrollmentForm.get('leadId')?.touched
+          "
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Please select a lead
+        </span>
+      </div>
+
+      <!-- Batch (create only) -->
+      <div class="form-group" *ngIf="!isEditMode()">
+        <label class="form-label">
+          <span class="material-icons label-icon">groups</span>
+          Select Batch
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">search</span>
+          <select
+            formControlName="batchId"
+            class="form-select"
+            [class.input-error]="
+              enrollmentForm.get('batchId')?.invalid &&
+              enrollmentForm.get('batchId')?.touched
+            "
+          >
+            <option value="">-- Select a batch --</option>
+            <option *ngFor="let batch of batches()" [value]="batch.batchId">
+              {{ batch.batchName }} - {{ batch.courseName }}
+            </option>
+          </select>
+        </div>
+        <span
+          class="error-message"
+          *ngIf="
+            enrollmentForm.get('batchId')?.invalid &&
+            enrollmentForm.get('batchId')?.touched
+          "
+        >
+          <span class="material-icons error-icon-small">error</span>
+          Please select a batch
+        </span>
+      </div>
+
+      <!-- Hidden course id -->
+      <input type="hidden" formControlName="courseId" />
+
+      <!-- Date + fees -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">event</span>
+            Enrollment Date
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">calendar_today</span>
+            <input
+              type="date"
+              formControlName="enrollmentDate"
+              class="form-input"
+              [class.input-error]="
+                enrollmentForm.get('enrollmentDate')?.invalid &&
+                enrollmentForm.get('enrollmentDate')?.touched
+              "
+            />
+          </div>
+          <span
+            class="error-message"
+            *ngIf="
+              enrollmentForm.get('enrollmentDate')?.invalid &&
+              enrollmentForm.get('enrollmentDate')?.touched
+            "
+          >
+            <span class="material-icons error-icon-small">error</span>
+            Enrollment date is required
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <span class="material-icons label-icon">payments</span>
+            Total Course Fees
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">currency_rupee</span>
+            <input
+              type="number"
+              formControlName="totalCourseFees"
+              class="form-input"
+              placeholder="Enter total course fees"
+              min="0"
+              [readonly]="!isEditMode()" 
+              [class.input-error]="
+                enrollmentForm.get('totalCourseFees')?.invalid &&
+                enrollmentForm.get('totalCourseFees')?.touched
+              "
+            />
+          </div>
+          <span
+            class="error-message"
+            *ngIf="
+              enrollmentForm.get('totalCourseFees')?.invalid &&
+              enrollmentForm.get('totalCourseFees')?.touched
+            "
+          >
+            <span class="material-icons error-icon-small">error</span>
+            Total course fees must be 0 or greater
+          </span>
+        </div>
+      </div>
+
+      <!-- ==================== DISCOUNT SECTION ==================== -->
+      <div class="discount-section">
+        <div class="section-header">
+          <span class="material-icons section-icon">local_offer</span>
+          <h3 class="section-title">Discount (Optional)</h3>
+        </div>
+
+        <!-- Discount Type Selection -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">
+              <span class="material-icons label-icon">percent</span>
+              Discount Percentage
+              <span class="info-badge">Max 50%</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="material-icons input-icon">trending_down</span>
+              <input
+                type="number"
+                formControlName="discountPercentage"
+                class="form-input"
+                placeholder="Enter discount percentage (0-50%)"
+                min="0"
+                max="50"
+                step="0.01"
+                [class.input-error]="
+                  enrollmentForm.get('discountPercentage')?.invalid &&
+                  enrollmentForm.get('discountPercentage')?.touched
+                "
+              />
+            </div>
+            <span
+              class="error-message"
+              *ngIf="
+                enrollmentForm.get('discountPercentage')?.hasError('max') &&
+                enrollmentForm.get('discountPercentage')?.touched
+              "
+            >
+              <span class="material-icons error-icon-small">error</span>
+              Discount percentage cannot exceed 50%
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <span class="material-icons label-icon">currency_rupee</span>
+              Discount Amount
+              <span class="info-badge">Max ₹25,000</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="material-icons input-icon">money_off</span>
+              <input
+                type="number"
+                formControlName="discountAmount"
+                class="form-input"
+                placeholder="Enter discount amount (0-25000)"
+                min="0"
+                max="25000"
+                step="0.01"
+                [class.input-error]="
+                  enrollmentForm.get('discountAmount')?.invalid &&
+                  enrollmentForm.get('discountAmount')?.touched
+                "
+              />
+            </div>
+            <span
+              class="error-message"
+              *ngIf="
+                enrollmentForm.get('discountAmount')?.hasError('max') &&
+                enrollmentForm.get('discountAmount')?.touched
+              "
+            >
+              <span class="material-icons error-icon-small">error</span>
+              Discount amount cannot exceed ₹25,000
+            </span>
+            <span
+              class="error-message"
+              *ngIf="enrollmentForm.hasError('discountExceedsFees')"
+            >
+              <span class="material-icons error-icon-small">error</span>
+              Discount amount cannot exceed total course fees
+            </span>
+          </div>
+        </div>
+
+        <!-- Discount Reason (Mandatory if discount applied) -->
+        <div class="form-group" *ngIf="discountType()">
+          <label class="form-label">
+            <span class="material-icons label-icon">description</span>
+            Discount Reason
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper textarea-wrapper">
+            <span class="material-icons input-icon textarea-icon">rate_review</span>
+            <textarea
+              formControlName="discountReason"
+              class="form-textarea"
+              placeholder="Please provide reason for discount (mandatory when discount is applied)"
+              rows="3"
+              [class.input-error]="
+                enrollmentForm.hasError('discountReasonRequired') &&
+                enrollmentForm.get('discountReason')?.touched
+              "
+            ></textarea>
+          </div>
+          <span
+            class="error-message"
+            *ngIf="
+              enrollmentForm.hasError('discountReasonRequired') &&
+              enrollmentForm.get('discountReason')?.touched
+            "
+          >
+            <span class="material-icons error-icon-small">error</span>
+            Discount reason is mandatory when discount is applied
+          </span>
+        </div>
+
+        <!-- Discount Info Badge -->
+        <div class="discount-info" *ngIf="discountType()">
+          <span class="material-icons info-icon-small">info</span>
+          <span class="info-text">
+            <strong>Note:</strong> 
+            {{ discountType() === 'PERCENTAGE' ? 'Percentage discount' : 'Fixed amount discount' }} 
+            is being applied. 
+            {{ discountType() === 'PERCENTAGE' ? 'Enter amount to switch to fixed discount.' : 'Enter percentage to switch to percentage discount.' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">flag</span>
+          Enrollment Status
+          <span class="required">*</span>
+        </label>
+        <div class="status-selector enrollment-status-selector">
+          <label
+            *ngFor="let status of statusOptions"
+            class="status-option"
+            [class.status-selected]="enrollmentForm.get('status')?.value === status"
+          >
+            <input
+              type="radio"
+              formControlName="status"
+              [value]="status"
+              class="status-radio"
+            />
+            <div
+              class="status-content"
+              [ngClass]="getEnrollmentStatusClass(status)"
+            >
+              <span class="material-icons status-icon">
+                {{ getEnrollmentStatusIcon(status) }}
+              </span>
+              <span class="status-label">{{ status }}</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">comment</span>
+          Remarks
+        </label>
+        <div class="input-wrapper textarea-wrapper">
+          <span class="material-icons input-icon textarea-icon">notes</span>
+          <textarea
+            formControlName="remarks"
+            class="form-textarea"
+            placeholder="Add any remarks or notes (optional)"
+            rows="4"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-icons btn-icon">close</span>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="isSubmitting() || enrollmentForm.invalid"
+        >
+          <span class="material-icons btn-icon" *ngIf="!isSubmitting()">save</span>
+          <span class="spinner-small" *ngIf="isSubmitting()"></span>
+          {{
+            isSubmitting()
+              ? (isEditMode() ? 'Updating...' : 'Creating...')
+              : (isEditMode() ? 'Update Enrollment' : 'Create Enrollment')
+          }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

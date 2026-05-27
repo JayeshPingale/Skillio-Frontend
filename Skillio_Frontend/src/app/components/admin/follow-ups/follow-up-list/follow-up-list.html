@@ -1,0 +1,303 @@
+<div class="follow-up-list-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">event_note</span>
+        Follow-Up Management
+      </h1>
+      <p class="page-subtitle">Track and manage customer follow-ups</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-create" (click)="navigateToCreate()">
+        <span class="material-icons btn-icon">add_circle</span>
+        Schedule Follow-Up
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-icons">assessment</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Follow-Ups</span>
+        <span class="stat-value">{{ stats().total }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-scheduled">
+      <div class="stat-icon">
+        <span class="material-icons">schedule</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Scheduled</span>
+        <span class="stat-value">{{ stats().scheduled }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-duetoday">
+      <div class="stat-icon">
+        <span class="material-icons">today</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Due Today</span>
+        <span class="stat-value">{{ stats().dueToday }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-overdue">
+      <div class="stat-icon">
+        <span class="material-icons">warning</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Overdue</span>
+        <span class="stat-value">{{ stats().overdue }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by lead name, notes, or created by..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select 
+      [value]="selectedStatus()"
+      (change)="updateSelectedStatus($any($event.target).value)"
+      class="status-filter"
+    >
+      <option *ngFor="let status of followUpStatuses" [value]="status">
+        {{ status === 'ALL' ? 'All Status' : status }}
+      </option>
+    </select>
+
+    <select 
+      [value]="selectedType()"
+      (change)="updateSelectedType($any($event.target).value)"
+      class="type-filter"
+    >
+      <option *ngFor="let type of followUpTypes" [value]="type">
+        {{ type === 'ALL' ? 'All Types' : type }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading follow-ups...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading()" class="table-container">
+    <table class="follow-ups-table">
+      <thead>
+        <tr>
+          <th class="th-id">
+            <span class="material-icons th-icon"></span>
+            ID
+          </th>
+          <th class="th-lead">
+            <span class="material-icons th-icon">person</span>
+            LEAD NAME
+          </th>
+          <th class="th-date">
+            <span class="material-icons th-icon">event</span>
+            FOLLOW-UP DATE
+          </th>
+          <th class="th-type">
+            <span class="material-icons th-icon">category</span>
+            TYPE
+          </th>
+          <th class="th-notes">
+            <span class="material-icons th-icon">notes</span>
+            NOTES
+          </th>
+          <th class="th-next-date">
+            <span class="material-icons th-icon">next_plan</span>
+            NEXT DATE
+          </th>
+          <th class="th-status">
+            <span class="material-icons th-icon">flag</span>
+            STATUS
+          </th>
+          <th class="th-created-by">
+            <span class="material-icons th-icon">account_circle</span>
+            CREATED BY
+          </th>
+          <th class="th-actions">
+            <span class="material-icons th-icon">settings</span>
+            ACTIONS
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let followUp of paginatedFollowUps()" class="table-row"
+            [ngClass]="{
+              'row-overdue': isOverdue(followUp.followUpDate, followUp.status),
+              'row-due-today': isDueToday(followUp.followUpDate, followUp.status)
+            }">
+          
+          <!-- ID -->
+          <td class="td-id">
+            <span class="follow-up-id-badge">{{ followUp.followUpId }}</span>
+          </td>
+
+          <!-- Lead Name -->
+          <td class="td-lead">
+            <div class="lead-cell">
+              <span class="material-icons lead-icon">person</span>
+              <span class="lead-name">{{ followUp.leadName }}</span>
+            </div>
+          </td>
+
+          <!-- Follow-up Date -->
+          <td class="td-date">
+            <div class="date-cell">
+              <span class="material-icons date-icon">event</span>
+              <span>{{ followUp.followUpDate | date: 'dd MMM yyyy' }}</span>
+            </div>
+          </td>
+
+          <!-- Type -->
+          <td class="td-type">
+            <span class="type-badge" [ngClass]="getTypeClass(followUp.followUpType)">
+              <span class="material-icons type-icon">{{ getTypeIcon(followUp.followUpType) }}</span>
+              {{ followUp.followUpType }}
+            </span>
+          </td>
+
+          <!-- Notes -->
+          <td class="td-notes">
+            <span class="notes-text" [title]="followUp.notes">
+              {{ followUp.notes }}
+            </span>
+          </td>
+
+          <!-- Next Date -->
+          <td class="td-next-date">
+            <span class="next-date-text">
+              {{ followUp.nextFollowUpDate | date: 'dd MMM yyyy' }}
+            </span>
+          </td>
+
+          <!-- Status -->
+          <td class="td-status">
+            <span class="status-badge" [ngClass]="getStatusClass(followUp.status)">
+              <span class="material-icons status-icon">{{ getStatusIcon(followUp.status) }}</span>
+              {{ followUp.status }}
+            </span>
+          </td>
+
+          <!-- Created By -->
+          <td class="td-created-by">
+            <span class="created-by-text">{{ followUp.createdByUserName }}</span>
+          </td>
+
+          <!-- Actions -->
+          <td class="td-actions">
+            <div class="actions-cell">
+              <button 
+                *ngIf="followUp.status === 'SCHEDULED'"
+                class="btn-action btn-complete"
+                (click)="markAsCompleted(followUp.followUpId, followUp.leadName)"
+                title="Mark Completed"
+              >
+                <span class="material-icons">check_circle</span>
+              </button>
+              <button 
+                class="btn-action btn-edit"
+                (click)="navigateToEdit(followUp.followUpId)"
+                title="Edit Follow-Up"
+              >
+                <span class="material-icons">edit</span>
+              </button>
+              <button 
+                class="btn-action btn-delete"
+                (click)="deleteFollowUp(followUp.followUpId, followUp.leadName)"
+                title="Delete Follow-Up"
+              >
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- No Data -->
+        <tr *ngIf="paginatedFollowUps().length === 0" class="no-data-row">
+          <td colspan="9" class="no-data-cell">
+            <span class="material-icons no-data-icon">event_busy</span>
+            <p>No follow-ups found matching your criteria</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!isLoading() && totalPages() > 1" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ ((currentPage() - 1) * itemsPerPage()) + 1 }} to {{ Math.min(currentPage() * itemsPerPage(), totalItems()) }} of {{ totalItems() }} follow-ups
+    </div>
+
+    <div class="pagination-controls">
+      <button class="pagination-btn pagination-first" (click)="goToPage(1)" [disabled]="currentPage() === 1" title="First Page">
+        <span class="material-icons">first_page</span>
+      </button>
+
+      <button class="pagination-btn pagination-prev" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1" title="Previous Page">
+        <span class="material-icons">chevron_left</span>
+      </button>
+
+      <div class="pagination-numbers">
+        <button
+          *ngFor="let page of [].constructor(totalPages()); let i = index"
+          class="pagination-number"
+          [class.active]="(i + 1) === currentPage()"
+          (click)="goToPage(i + 1)"
+        >
+          {{ i + 1 }}
+        </button>
+      </div>
+
+      <button class="pagination-btn pagination-next" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()" title="Next Page">
+        <span class="material-icons">chevron_right</span>
+      </button>
+
+      <button class="pagination-btn pagination-last" (click)="goToPage(totalPages())" [disabled]="currentPage() === totalPages()" title="Last Page">
+        <span class="material-icons">last_page</span>
+      </button>
+    </div>
+
+    <div class="items-per-page">
+      <label>Items per page:</label>
+      <select [value]="itemsPerPage()" (change)="changeItemsPerPage($any($event.target).value)" class="items-select">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,152 @@
+<!-- Student Details Modal -->
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <span class="material-icons title-icon">school</span>
+        Student Details - {{ student()?.fullName }}
+      </h2>
+      <button class="btn-close" (click)="closeModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      @if (isLoading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading student details...</p>
+        </div>
+      } @else if (student()) {
+        <div class="details-grid">
+          <!-- Student ID -->
+          <div class="detail-item">
+            <span class="material-icons detail-icon">tag</span>
+            <div class="detail-content">
+              <span class="detail-label">STUDENT ID</span>
+              <span class="detail-value">#{{ student()!.studentId }}</span>
+            </div>
+          </div>
+
+          <!-- Full Name -->
+          <div class="detail-item">
+            <span class="material-icons detail-icon">person</span>
+            <div class="detail-content">
+              <span class="detail-label">FULL NAME</span>
+              <span class="detail-value">{{ student()!.fullName }}</span>
+            </div>
+          </div>
+
+          <!-- Contact Number -->
+          <div class="detail-item">
+            <span class="material-icons detail-icon">phone</span>
+            <div class="detail-content">
+              <span class="detail-label">CONTACT NUMBER</span>
+              <span class="detail-value">{{ student()!.contactNumber }}</span>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="detail-item">
+            <span class="material-icons detail-icon">email</span>
+            <div class="detail-content">
+              <span class="detail-label">EMAIL</span>
+              <span class="detail-value">{{ student()!.email }}</span>
+            </div>
+          </div>
+
+          <!-- Student Code -->
+          <div class="detail-item">
+            <span class="material-icons detail-icon">badge</span>
+            <div class="detail-content">
+              <span class="detail-label">STUDENT CODE</span>
+              <span class="detail-value code-badge">{{ student()!.studentCode }}</span>
+            </div>
+          </div>
+
+          <!-- Enrollment Date -->
+          <div class="detail-item">
+            <span class="material-icons detail-icon">event</span>
+            <div class="detail-content">
+              <span class="detail-label">ENROLLMENT DATE</span>
+              <span class="detail-value">{{ student()!.enrollmentDate | date: 'dd MMM yyyy' }}</span>
+            </div>
+          </div>
+
+          <!-- Date of Birth -->
+          <div class="detail-item">
+            <span class="material-icons detail-icon">cake</span>
+            <div class="detail-content">
+              <span class="detail-label">DATE OF BIRTH</span>
+              <span class="detail-value">{{ student()!.dateOfBirth | date: 'dd MMM yyyy' }}</span>
+            </div>
+          </div>
+
+          <!-- Age -->
+          <div class="detail-item">
+            <span class="material-icons detail-icon">calendar_today</span>
+            <div class="detail-content">
+              <span class="detail-label">AGE</span>
+              <span class="detail-value age-badge">{{ calculateAge(student()!.dateOfBirth) }} years</span>
+            </div>
+          </div>
+
+          <!-- Alternate Contact -->
+          @if (student()!.alternateContact) {
+            <div class="detail-item">
+              <span class="material-icons detail-icon">contact_phone</span>
+              <div class="detail-content">
+                <span class="detail-label">ALTERNATE CONTACT</span>
+                <span class="detail-value">{{ student()!.alternateContact }}</span>
+              </div>
+            </div>
+          }
+
+          <!-- Status -->
+          <div class="detail-item">
+            <span class="material-icons detail-icon">flag</span>
+            <div class="detail-content">
+              <span class="detail-label">STATUS</span>
+              <span class="detail-value">
+                <span class="status-badge" [ngClass]="getStatusClass(student()!.status)">
+                  <span class="material-icons status-icon">{{ getStatusIcon(student()!.status) }}</span>
+                  {{ student()!.status }}
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Address (Full Width) -->
+          <div class="detail-item detail-item-full">
+            <span class="material-icons detail-icon">location_on</span>
+            <div class="detail-content">
+              <span class="detail-label">ADDRESS</span>
+              <span class="detail-value">{{ student()!.address }}</span>
+            </div>
+          </div>
+
+          <!-- Remarks (Full Width) -->
+          @if (student()!.remarks) {
+            <div class="detail-item detail-item-full">
+              <span class="material-icons detail-icon">comment</span>
+              <div class="detail-content">
+                <span class="detail-label">REMARKS</span>
+                <span class="detail-value">{{ student()!.remarks }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeModal()">
+        <span class="material-icons btn-icon">close</span>
+        Close
+      </button>
+    </div>
+  </div>
+</div>

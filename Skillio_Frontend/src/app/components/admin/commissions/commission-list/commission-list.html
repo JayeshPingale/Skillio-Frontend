@@ -1,0 +1,295 @@
+<app-confirmation-dialog></app-confirmation-dialog>
+
+<div class="commission-list-wrapper">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">account_balance_wallet</span>
+        Commission Management
+      </h1>
+      <p class="page-subtitle">Track and manage staff commissions on enrollments</p>
+    </div>
+    <div class="header-right">
+      <button *ngIf="authService.isAdmin()" class="btn-create" (click)="navigateToCreate()">
+        <span class="material-icons">add_circle</span>
+        Create Commission
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon"><span class="material-icons">receipt_long</span></div>
+      <div class="stat-content">
+        <span class="stat-label">Total Commissions</span>
+        <span class="stat-value">{{ stats().total }}</span>
+        <span class="stat-amount">₹{{ stats().totalAmount | number:'1.0-0' }}</span>
+      </div>
+    </div>
+    <div class="stat-card stat-pending">
+      <div class="stat-icon"><span class="material-icons">hourglass_top</span></div>
+      <div class="stat-content">
+        <span class="stat-label">Pending</span>
+        <span class="stat-value">{{ stats().pending }}</span>
+        <span class="stat-amount">₹{{ stats().pendingAmount | number:'1.0-0' }}</span>
+      </div>
+    </div>
+    <div class="stat-card stat-eligible">
+      <div class="stat-icon"><span class="material-icons">verified</span></div>
+      <div class="stat-content">
+        <span class="stat-label">Eligible</span>
+        <span class="stat-value">{{ stats().eligible }}</span>
+        <span class="stat-amount">₹{{ stats().eligibleAmount | number:'1.0-0' }}</span>
+      </div>
+    </div>
+    <div class="stat-card stat-paid">
+      <div class="stat-icon"><span class="material-icons">check_circle</span></div>
+      <div class="stat-content">
+        <span class="stat-label">Paid</span>
+        <span class="stat-value">{{ stats().paid }}</span>
+        <span class="stat-amount">₹{{ stats().paidAmount | number:'1.0-0' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by student, course, or sales executive..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+    <select
+      [value]="selectedStatus()"
+      (change)="updateStatus($any($event.target).value)"
+      class="status-filter"
+    >
+      <option *ngFor="let s of statusOptions" [value]="s">
+        {{ s === 'ALL' ? 'All Status' : s }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons">check_circle</span> {{ successMessage() }}
+  </div>
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons">error</span> {{ errorMessage() }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p>Loading commissions...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading()" class="table-container">
+    <table class="commission-table">
+      <thead>
+        <tr>
+          <th><span class="material-icons">tag</span> ID</th>
+          <th><span class="material-icons">person</span> STUDENT</th>
+          <th><span class="material-icons">book</span> COURSE</th>
+          <th *ngIf="!authService.isSalesExecutive()">
+            <span class="material-icons">badge</span> SALES EXEC
+          </th>
+          <th><span class="material-icons">currency_rupee</span> TOTAL FEES</th>
+          <th><span class="material-icons">percent</span> %</th>
+          <th><span class="material-icons">currency_rupee</span> ELIGIBLE</th>
+          <th><span class="material-icons">info</span> STATUS</th>
+          <th><span class="material-icons">event</span> ELIGIBLE DATE</th>
+          <th><span class="material-icons">event_available</span> PAID DATE</th>
+          <th><span class="material-icons">settings</span> ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of filteredCommissions()" class="table-row">
+          <td><span class="id-badge">{{ c.commissionId }}</span></td>
+          <td>
+            <div class="person-cell">
+              <span class="material-icons person-icon">account_circle</span>
+              {{ c.studentName }}
+            </div>
+          </td>
+          <td>{{ c.courseName }}</td>
+          <td *ngIf="!authService.isSalesExecutive()">{{ c.salesExecutiveName }}</td>
+          <td>₹{{ c.totalCourseFees | number:'1.0-0' }}</td>
+          <td><span class="percent-badge">{{ c.commissionPercentage }}%</span></td>
+          <td class="amount-cell">₹{{ c.eligibleAmount | number:'1.2-2' }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(c.status)">
+              <span class="material-icons status-icon">{{ getStatusIcon(c.status) }}</span>
+              {{ c.status }}
+            </span>
+          </td>
+          <td>{{ c.eligibilityDate ? (c.eligibilityDate | date:'dd MMM yyyy') : '—' }}</td>
+          <td>{{ c.paidDate ? (c.paidDate | date:'dd MMM yyyy') : '—' }}</td>
+          <td>
+            <div class="actions-cell">
+
+              <!-- Approve — Admin only, PENDING_APPROVAL status -->
+              <button
+                *ngIf="authService.isAdmin() && c.status === 'PENDING_APPROVAL'"
+                class="btn-action btn-approve"
+                (click)="openApproveModal(c, 'approve')"
+                title="Approve">
+                <span class="material-icons">thumb_up</span>
+              </button>
+
+              <!-- Reject — Admin only, PENDING_APPROVAL status -->
+              <button
+                *ngIf="authService.isAdmin() && c.status === 'PENDING_APPROVAL'"
+                class="btn-action btn-reject"
+                (click)="openApproveModal(c, 'reject')"
+                title="Reject">
+                <span class="material-icons">thumb_down</span>
+              </button>
+
+              <!-- Mark Eligible — Admin only, PENDING or APPROVED -->
+              <button
+                *ngIf="authService.isAdmin() && (c.status === 'PENDING' || c.status === 'APPROVED')"
+                class="btn-action btn-eligible"
+                (click)="markAsEligible(c.commissionId, c.studentName)"
+                title="Mark Eligible">
+                <span class="material-icons">verified</span>
+              </button>
+
+              <!-- Mark Paid — Admin only, ELIGIBLE -->
+              <button
+                *ngIf="authService.isAdmin() && c.status === 'ELIGIBLE'"
+                class="btn-action btn-paid"
+                (click)="markAsPaid(c.commissionId, c.studentName)"
+                title="Mark Paid">
+                <span class="material-icons">check_circle</span>
+              </button>
+
+              <!-- Edit — Admin only, not PAID -->
+              <button
+                *ngIf="authService.isAdmin() && c.status !== 'PAID'"
+                class="btn-action btn-edit"
+                (click)="navigateToEdit(c.commissionId)"
+                title="Edit">
+                <span class="material-icons">edit</span>
+              </button>
+
+              <!-- Delete — Admin only -->
+              <button
+                *ngIf="authService.isAdmin()"
+                class="btn-action btn-delete"
+                (click)="deleteCommission(c.commissionId, c.studentName)"
+                title="Delete">
+                <span class="material-icons">delete</span>
+              </button>
+
+            </div>
+          </td>
+        </tr>
+
+        <!-- No Data Row -->
+        <tr *ngIf="filteredCommissions().length === 0" class="no-data-row">
+          <td [colSpan]="authService.isSalesExecutive() ? 10 : 11" class="no-data-cell">
+            <span class="material-icons no-data-icon">money_off</span>
+            <p>No commissions found matching your criteria</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== APPROVE / REJECT MODAL ==================== -->
+  <div *ngIf="showApproveModal()" class="modal-overlay" (click)="closeApproveModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+
+      <div class="modal-header"
+           [class.approve-header]="approveAction() === 'approve'"
+           [class.reject-header]="approveAction() === 'reject'">
+        <h2>
+          <span class="material-icons">
+            {{ approveAction() === 'approve' ? 'thumb_up' : 'thumb_down' }}
+          </span>
+          {{ approveAction() === 'approve' ? 'Approve Commission' : 'Reject Commission' }}
+        </h2>
+        <button class="modal-close" (click)="closeApproveModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedCommission() as c">
+        <div class="modal-info-grid">
+          <div class="modal-info-row">
+            <span class="modal-info-label">Student</span>
+            <span class="modal-info-value">{{ c.studentName }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">Course</span>
+            <span class="modal-info-value">{{ c.courseName }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">Sales Executive</span>
+            <span class="modal-info-value">{{ c.salesExecutiveName }}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">Commission %</span>
+            <span class="modal-info-value">{{ c.commissionPercentage }}%</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">Eligible Amount</span>
+            <span class="modal-info-value highlight">₹{{ c.eligibleAmount | number:'1.2-2' }}</span>
+          </div>
+          <div class="modal-info-row" *ngIf="c.requestedRemarks">
+            <span class="modal-info-label">Exec Remarks</span>
+            <span class="modal-info-value">{{ c.requestedRemarks }}</span>
+          </div>
+        </div>
+
+        <div class="modal-field">
+          <label class="modal-label">
+            <span class="material-icons">comment</span>
+            Admin Comments
+            {{ approveAction() === 'reject' ? '(Required)' : '(Optional)' }}
+          </label>
+          <textarea
+            class="modal-textarea"
+            rows="3"
+            [placeholder]="approveAction() === 'approve' ? 'Add any notes...' : 'Reason for rejection...'"
+            [value]="adminComments()"
+            (input)="adminComments.set($any($event.target).value)">
+          </textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          class="btn-cancel-modal"
+          (click)="closeApproveModal()"
+          [disabled]="isSubmitting()">
+          Cancel
+        </button>
+        <button
+          class="btn-confirm-modal"
+          [class.btn-approve-confirm]="approveAction() === 'approve'"
+          [class.btn-reject-confirm]="approveAction() === 'reject'"
+          (click)="submitApproveReject()"
+          [disabled]="isSubmitting()">
+          <span class="spinner-small" *ngIf="isSubmitting()"></span>
+          <span class="material-icons" *ngIf="!isSubmitting()">
+            {{ approveAction() === 'approve' ? 'thumb_up' : 'thumb_down' }}
+          </span>
+          {{ isSubmitting() ? 'Processing...' : (approveAction() === 'approve' ? 'Approve' : 'Reject') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

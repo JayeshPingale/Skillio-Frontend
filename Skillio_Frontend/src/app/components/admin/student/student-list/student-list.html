@@ -1,0 +1,354 @@
+<div class="student-list-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">school</span>
+        Student Management
+      </h1>
+      <p class="page-subtitle">
+        @if (isAdmin()) {
+          Manage all registered students
+        } @else if (isSalesExec()) {
+          View students you have enrolled
+        } @else {
+          Manage student records
+        }
+      </p>
+    </div>
+    <div class="header-right">
+      @if (isAdmin()) {
+        <button class="btn-create" (click)="navigateToCreate()">
+          <span class="material-icons btn-icon">add_circle</span>
+          Add Student
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">
+        <span class="material-icons">groups</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">
+          @if (isSalesExec()) {
+            My Students
+          } @else {
+            Total Students
+          }
+        </span>
+        <span class="stat-value">{{ stats().total }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-active">
+      <div class="stat-icon">
+        <span class="material-icons">check_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Active</span>
+        <span class="stat-value">{{ stats().active }}</span>
+      </div>
+    </div>
+
+    <!-- <div class="stat-card stat-completed">
+      <div class="stat-icon">
+        <span class="material-icons">task_alt</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Completed</span>
+        <span class="stat-value">{{ stats().completed }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-other">
+      <div class="stat-icon">
+        <span class="material-icons">pause_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Dropped / On Hold</span>
+        <span class="stat-value">{{ stats().dropped + stats().onHold }}</span>
+      </div>
+    </div> -->
+  </div>
+
+  <!-- Filter Section -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by name, email, code, or phone..."
+        [value]="searchTerm()"
+        (input)="updateSearchTerm($any($event.target).value)"
+        class="search-input"
+      />
+    </div>
+
+    <select
+      [value]="selectedStatus()"
+      (change)="updateStatus($any($event.target).value)"
+      class="status-filter"
+    >
+      <option *ngFor="let status of statusOptions" [value]="status">
+        {{ status === 'ALL' ? 'All Status' : status }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading students...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading()" class="table-container">
+    <table class="students-table">
+      <thead>
+        <tr>
+          <th class="th-id">
+            <span class="material-icons th-icon">tag</span>
+            ID
+          </th>
+          <th class="th-name">
+            <span class="material-icons th-icon">person</span>
+            FULL NAME
+          </th>
+          <th class="th-email">
+            <span class="material-icons th-icon">email</span>
+            EMAIL
+          </th>
+          <th class="th-phone">
+            <span class="material-icons th-icon">phone</span>
+            PHONE
+          </th>
+          <th class="th-dob">
+            <span class="material-icons th-icon">cake</span>
+            DATE OF BIRTH
+          </th>
+          <th class="th-age">
+            <span class="material-icons th-icon">calendar_today</span>
+            AGE
+          </th>
+          <th class="th-address">
+            <span class="material-icons th-icon">location_on</span>
+            ADDRESS
+          </th>
+          <th class="th-created">
+            <span class="material-icons th-icon">schedule</span>
+            CREATED AT
+          </th>
+          <th class="th-actions">
+            <span class="material-icons th-icon">settings</span>
+            ACTIONS
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let student of paginatedStudents()" class="table-row">
+          
+          <!-- ID -->
+          <td class="td-id">
+            <span class="student-id-badge">#{{ student.studentId }}</span>
+          </td>
+
+          <!-- Full Name -->
+          <td class="td-name">
+            <div class="name-cell">
+              <span class="material-icons name-icon">account_circle</span>
+              <span class="name-text">{{ student.fullName }}</span>
+            </div>
+          </td>
+
+          <!-- Email -->
+          <td class="td-email">
+            <div class="email-cell">
+              <span class="material-icons email-icon">alternate_email</span>
+              <span class="email-text">{{ student.email }}</span>
+            </div>
+          </td>
+
+          <!-- Phone -->
+          <td class="td-phone">
+            <div class="phone-cell">
+              <span class="material-icons phone-icon">smartphone</span>
+              <span class="phone-text">{{ student.contactNumber }}</span>
+            </div>
+          </td>
+
+          <!-- Date of Birth -->
+          <td class="td-dob">
+            <div class="dob-cell">
+              <span class="material-icons dob-icon">event</span>
+              <span>{{ student.dateOfBirth | date: 'dd MMM yyyy' }}</span>
+            </div>
+          </td>
+
+          <!-- Age -->
+          <td class="td-age">
+            <span class="age-badge">
+              <span class="material-icons age-icon">person_outline</span>
+              {{ calculateAge(student.dateOfBirth) }} yrs
+            </span>
+          </td>
+
+          <!-- Address -->
+          <td class="td-address">
+            <span class="address-text" [title]="student.address">
+              {{ student.address }}
+            </span>
+          </td>
+
+          <!-- Created At -->
+          <td class="td-created">
+            <div class="created-cell">
+              <span class="created-text">
+                {{ student.createdAt | date: 'dd MMM yyyy' }}
+              </span>
+            </div>
+          </td>
+
+          <!-- Actions -->
+          <td class="td-actions">
+            <div class="actions-cell">
+              <!-- ✅ ADMIN: View + Edit + Delete -->
+              @if (isAdmin()) {
+                <button 
+                  class="btn-action btn-view"
+                  (click)="openDetailsModal(student.studentId)"
+                  title="View Student Details"
+                >
+                  <span class="material-icons">visibility</span>
+                </button>
+                <button 
+                  class="btn-action btn-edit"
+                  (click)="navigateToEdit(student.studentId)"
+                  title="Edit Student"
+                >
+                  <span class="material-icons">edit</span>
+                </button>
+                <button 
+                  class="btn-action btn-delete"
+                  (click)="deleteStudent(student.studentId, student.fullName)"
+                  title="Delete Student"
+                >
+                  <span class="material-icons">delete</span>
+                </button>
+              }
+
+              <!-- ✅ SALES EXEC: View + Edit + Delete (Coming Soon) -->
+              @else if (isSalesExec()) {
+                <button 
+                  class="btn-action btn-view"
+                  (click)="openDetailsModal(student.studentId)"
+                  title="View Student Details"
+                >
+                  <span class="material-icons">visibility</span>
+                </button>
+                <button 
+                  class="btn-action btn-edit"
+                  (click)="navigateToEdit(student.studentId)"
+                  title="Edit Student"
+                >
+                  <span class="material-icons">edit</span>
+                </button>
+                <button 
+                  class="btn-action btn-delete"
+                  (click)="showComingSoonMessage()"
+                  title="Delete Student (Coming Soon)"
+                >
+                  <span class="material-icons">delete</span>
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+
+        <!-- No Data -->
+        <tr *ngIf="paginatedStudents().length === 0" class="no-data-row">
+          <td colspan="9" class="no-data-cell">
+            <span class="material-icons no-data-icon">person_off</span>
+            <p>
+              @if (searchTerm() || selectedStatus() !== 'ALL') {
+                No students found matching your criteria
+              } @else if (isSalesExec()) {
+                You haven't enrolled any students yet
+              } @else {
+                No students available
+              }
+            </p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!isLoading() && totalPages() > 1" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ ((currentPage() - 1) * itemsPerPage()) + 1 }} to {{ Math.min(currentPage() * itemsPerPage(), totalItems()) }} of {{ totalItems() }} students
+    </div>
+
+    <div class="pagination-controls">
+      <button class="pagination-btn pagination-first" (click)="goToPage(1)" [disabled]="currentPage() === 1" title="First Page">
+        <span class="material-icons">first_page</span>
+      </button>
+
+      <button class="pagination-btn pagination-prev" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1" title="Previous Page">
+        <span class="material-icons">chevron_left</span>
+      </button>
+
+      <div class="pagination-numbers">
+        <button
+          *ngFor="let page of [].constructor(totalPages()); let i = index"
+          class="pagination-number"
+          [class.active]="(i + 1) === currentPage()"
+          (click)="goToPage(i + 1)"
+        >
+          {{ i + 1 }}
+        </button>
+      </div>
+
+      <button class="pagination-btn pagination-next" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()" title="Next Page">
+        <span class="material-icons">chevron_right</span>
+      </button>
+
+      <button class="pagination-btn pagination-last" (click)="goToPage(totalPages())" [disabled]="currentPage() === totalPages()" title="Last Page">
+        <span class="material-icons">last_page</span>
+      </button>
+    </div>
+
+    <div class="items-per-page">
+      <label>Items per page:</label>
+      <select [value]="itemsPerPage()" (change)="changeItemsPerPage($any($event.target).value)" class="items-select">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Student Details Modal - Only render if selectedStudentId is not null -->
+@if (showDetailsModal() && selectedStudentId()) {
+  <app-student-details-modal
+    [studentId]="selectedStudentId()!"
+    (close)="closeDetailsModal()"
+  />
+}
+

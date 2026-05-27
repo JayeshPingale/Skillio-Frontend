@@ -1,0 +1,166 @@
+<!-- src/app/components/admin/invoices/invoice-manage/invoice-manage.html -->
+
+<div class="invoice-manage-wrapper" [class.dark-mode]="themeService.isDark()">
+
+  <!-- ==================== HEADER ==================== -->
+  <div class="page-header">
+    <button class="btn-back" (click)="cancel()">
+      <span class="material-icons">arrow_back</span>
+    </button>
+    <div class="header-info">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">receipt_long</span>
+        {{ pageTitle() }}
+      </h1>
+      <p class="page-subtitle">{{ pageSubtitle() }}</p>
+    </div>
+  </div>
+
+  <!-- ==================== ALERTS ==================== -->
+  <div *ngIf="successMessage()" class="success-alert">
+    <span class="material-icons success-icon">check_circle</span>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-icons error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- ==================== LOADING ==================== -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading invoice...</p>
+  </div>
+
+  <!-- ==================== FORM CONTAINER ==================== -->
+  <div *ngIf="!isLoading()" class="form-container">
+
+    <!-- Invoice Info Section (Read Only Display) -->
+    <div *ngIf="currentInvoice()" class="info-section">
+      <div class="info-header">
+        <span class="material-icons">info</span>
+        <span>Invoice Details (Read Only)</span>
+      </div>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Invoice Number</span>
+          <span class="info-value highlight">{{ currentInvoice()?.invoiceNumber }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Student</span>
+          <span class="info-value">{{ currentInvoice()?.studentName || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Student Code</span>
+          <span class="info-value">{{ currentInvoice()?.studentCode }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Amount</span>
+          <span class="info-value">₹{{ currentInvoice()?.amount | number:'1.2-2' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Payment Mode</span>
+          <span class="info-value">{{ currentInvoice()?.paymentMode }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Receipt Number</span>
+          <span class="info-value">{{ currentInvoice()?.receiptNumber }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Generated Date</span>
+          <span class="info-value">
+            {{ currentInvoice()?.generatedDate | date:'dd MMM yyyy, HH:mm' }}
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Sent to Email</span>
+          <span class="info-value" [class.status-yes]="currentInvoice()?.sentToEmail">
+            {{ currentInvoice()?.sentToEmail ? '✅ Yes' : '❌ No' }}
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Sent to WhatsApp</span>
+          <span class="info-value" [class.status-yes]="currentInvoice()?.sentToWhatsApp">
+            {{ currentInvoice()?.sentToWhatsApp ? '✅ Yes' : '❌ No' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== EDIT FORM ==================== -->
+    <form [formGroup]="invoiceForm" (ngSubmit)="onSubmit()" class="invoice-form">
+
+      <!-- PDF Path -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">picture_as_pdf</span>
+          PDF Path
+        </label>
+        <input
+          type="text"
+          formControlName="pdfPath"
+          class="form-input"
+          placeholder="e.g., invoices/pdf/INV_2025_0001.pdf"
+          maxlength="500"
+        />
+        <span class="help-text">Path where the invoice PDF is stored on server</span>
+        <span
+          class="error-message"
+          *ngIf="invoiceForm.get('pdfPath')?.touched && invoiceForm.get('pdfPath')?.errors?.['maxlength']"
+        >
+          PDF path cannot exceed 500 characters
+        </span>
+      </div>
+
+      <!-- Remarks -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="material-icons label-icon">notes</span>
+          Remarks
+        </label>
+        <textarea
+          formControlName="remarks"
+          class="form-textarea"
+          rows="4"
+          placeholder="Enter any additional notes or remarks..."
+          maxlength="500"
+        ></textarea>
+        <span class="char-count">
+          {{ invoiceForm.get('remarks')?.value?.length || 0 }}/500
+        </span>
+        <span
+          class="error-message"
+          *ngIf="invoiceForm.get('remarks')?.touched && invoiceForm.get('remarks')?.errors?.['maxlength']"
+        >
+          Remarks cannot exceed 500 characters
+        </span>
+      </div>
+
+      <!-- ==================== FORM ACTIONS ==================== -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-icons">close</span>
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="invoiceForm.invalid || isSubmitting()"
+        >
+          <span class="material-icons" *ngIf="!isSubmitting()">save</span>
+          <div class="spinner-small" *ngIf="isSubmitting()"></div>
+          {{ isSubmitting() ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>

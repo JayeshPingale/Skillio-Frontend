@@ -1,0 +1,249 @@
+<div class="batch-create-wrapper">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="cancel()">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Back
+      </button>
+      <div class="header-info">
+        <h1 class="page-title">Create New Batch</h1>
+        <p class="page-subtitle">Set up a new batch for course enrollment</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage()" class="error-alert">
+    <span class="material-symbols-outlined error-icon">error</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-container">
+    <div class="spinner-large"></div>
+    <p class="loading-text">Loading form data...</p>
+  </div>
+
+  <!-- Form Card -->
+  <div *ngIf="!isLoading()" class="form-card">
+    <form [formGroup]="batchForm" (ngSubmit)="onSubmit()">
+      <div class="form-header">
+        <span class="material-symbols-outlined header-icon">school</span>
+        <h2>Batch Information</h2>
+      </div>
+
+      <!-- Batch Code -->
+      <div class="form-group">
+        <label for="batchCode" class="input-label">
+          <span class="material-symbols-outlined label-icon">qr_code</span>
+          Batch Code *
+        </label>
+        <input
+          type="text"
+          id="batchCode"
+          formControlName="batchCode"
+          class="input-field"
+          placeholder="e.g., JAVA_2025_JAN or Daffodil25A"
+          [class.error]="batchCode?.invalid && batchCode?.touched"
+        />
+        <div class="input-hint">Unique identifier for the batch (3-50 characters)</div>
+        <div class="error-message" *ngIf="batchCode?.invalid && batchCode?.touched">
+          <span *ngIf="batchCode?.errors?.['required']">Batch code is required</span>
+          <span *ngIf="batchCode?.errors?.['minlength']">Minimum 3 characters required</span>
+        </div>
+      </div>
+
+      <!-- Batch Name -->
+      <div class="form-group">
+        <label for="batchName" class="input-label">
+          <span class="material-symbols-outlined label-icon">label</span>
+          Batch Name *
+        </label>
+        <input
+          type="text"
+          id="batchName"
+          formControlName="batchName"
+          class="input-field"
+          placeholder="e.g., Java Full Stack Development - January 2025"
+          [class.error]="batchName?.invalid && batchName?.touched"
+        />
+        <div class="error-message" *ngIf="batchName?.invalid && batchName?.touched">
+          <span *ngIf="batchName?.errors?.['required']">Batch name is required</span>
+          <span *ngIf="batchName?.errors?.['minlength']">Minimum 3 characters required</span>
+        </div>
+      </div>
+
+      <!-- Course Selection -->
+      <div class="form-group">
+        <label for="courseId" class="input-label">
+          <span class="material-symbols-outlined label-icon">menu_book</span>
+          Course *
+        </label>
+        <select
+          id="courseId"
+          formControlName="courseId"
+          class="input-field"
+          [class.error]="courseId?.invalid && courseId?.touched"
+        >
+          <option [value]="null" disabled>Select a course</option>
+          <option *ngFor="let course of courses()" [value]="course.courseId">
+            {{ course.courseName }} ({{ course.duration }})
+          </option>
+        </select>
+        <div class="error-message" *ngIf="courseId?.invalid && courseId?.touched">
+          <span *ngIf="courseId?.errors?.['required']">Course selection is required</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- Start Date -->
+        <div class="form-group">
+          <label for="startDate" class="input-label">
+            <span class="material-symbols-outlined label-icon">calendar_today</span>
+            Start Date *
+          </label>
+          <input
+            type="date"
+            id="startDate"
+            formControlName="startDate"
+            class="input-field"
+            [min]="getTodayDate()"
+            [class.error]="startDate?.invalid && startDate?.touched"
+          />
+          <div class="error-message" *ngIf="startDate?.invalid && startDate?.touched">
+            <span *ngIf="startDate?.errors?.['required']">Start date is required</span>
+          </div>
+        </div>
+
+        <!-- End Date -->
+        <div class="form-group">
+          <label for="endDate" class="input-label">
+            <span class="material-symbols-outlined label-icon">event</span>
+            End Date *
+          </label>
+          <input
+            type="date"
+            id="endDate"
+            formControlName="endDate"
+            class="input-field"
+            [min]="startDate?.value || getTodayDate()"
+            [class.error]="endDate?.invalid && endDate?.touched"
+          />
+          <div class="error-message" *ngIf="endDate?.invalid && endDate?.touched">
+            <span *ngIf="endDate?.errors?.['required']">End date is required</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timing -->
+      <div class="form-group">
+        <label for="timing" class="input-label">
+          <span class="material-symbols-outlined label-icon">schedule</span>
+          Timing *
+        </label>
+        <input
+          type="text"
+          id="timing"
+          formControlName="timing"
+          class="input-field"
+          placeholder="e.g., 10:00 AM - 12:00 PM"
+          [class.error]="timing?.invalid && timing?.touched"
+        />
+        <div class="error-message" *ngIf="timing?.invalid && timing?.touched">
+          <span *ngIf="timing?.errors?.['required']">Timing is required</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- Mode of Class -->
+        <div class="form-group">
+          <label for="modeOfClass" class="input-label">
+            <span class="material-symbols-outlined label-icon">computer</span>
+            Mode of Class *
+          </label>
+          <select
+            id="modeOfClass"
+            formControlName="modeOfClass"
+            class="input-field"
+            [class.error]="modeOfClass?.invalid && modeOfClass?.touched"
+          >
+            <option value="" disabled>Select mode</option>
+            <option value="ONLINE">Online</option>
+            <option value="OFFLINE">Offline</option>
+            <option value="HYBRID">Hybrid</option>
+          </select>
+          <div class="error-message" *ngIf="modeOfClass?.invalid && modeOfClass?.touched">
+            <span *ngIf="modeOfClass?.errors?.['required']">Mode of class is required</span>
+          </div>
+        </div>
+
+        <!-- Instructor -->
+        <div class="form-group">
+          <label for="instructor" class="input-label">
+            <span class="material-symbols-outlined label-icon">person</span>
+            Instructor Name *
+          </label>
+          <input
+            type="text"
+            id="instructor"
+            formControlName="instructor"
+            class="input-field"
+            placeholder="e.g., John Doe"
+            [class.error]="instructor?.invalid && instructor?.touched"
+          />
+          <div class="error-message" *ngIf="instructor?.invalid && instructor?.touched">
+            <span *ngIf="instructor?.errors?.['required']">Instructor name is required</span>
+            <span *ngIf="instructor?.errors?.['minlength']">Minimum 2 characters required</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description" class="input-label">
+          <span class="material-symbols-outlined label-icon">description</span>
+          Description (Optional)
+        </label>
+        <textarea
+          id="description"
+          formControlName="description"
+          class="input-field textarea-field"
+          placeholder="Additional information about the batch..."
+          rows="4"
+          [class.error]="description?.invalid && description?.touched"
+        ></textarea>
+        <div class="char-count">
+          {{ description?.value?.length || 0 }} / 500 characters
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancel()"
+          [disabled]="isSubmitting()"
+        >
+          <span class="material-symbols-outlined">close</span>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="isSubmitting() || batchForm.invalid"
+        >
+          <span *ngIf="!isSubmitting()">
+            <span class="material-symbols-outlined">add_circle</span>
+            Create Batch
+          </span>
+          <span *ngIf="isSubmitting()" class="loading-text">
+            <span class="spinner"></span>
+            Creating...
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
